@@ -4,14 +4,9 @@
 
 ## インストール
 
-Claude Code (v1.0.33+) で以下を順に実行:
-
 ```bash
-# 1. マーケットプレイスを追加
-/plugin marketplace add stsrjkt-bit/claude-plugins
-
-# 2. プラグインをインストール
-/plugin install card-builder@sato-math-academy
+git clone https://github.com/stsrjkt-bit/claude-plugins.git ~/claude-plugins
+cp -r ~/claude-plugins/card-builder/skills/card-builder ~/.claude/skills/card-builder
 ```
 
 ### ローカルテスト（開発用）
