@@ -1,0 +1,22 @@
+{
+  "name": "sato-math-academy",
+  "owner": {
+    "name": "sato-math-academy"
+  },
+  "metadata": {
+    "description": "さとう数理塾 Claude Code プラグイン集",
+    "version": "1.0.0",
+    "pluginRoot": "."
+  },
+  "plugins": [
+    {
+      "name": "card-builder",
+      "source": "./card-builder",
+      "description": "生徒のお悩みカードを作成するスキル",
+      "version": "1.0.0",
+      "author": {
+        "name": "sato-math-academy"
+      }
+    }
+  ]
+}
