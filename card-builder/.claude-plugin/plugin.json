@@ -1,0 +1,8 @@
+{
+  "name": "card-builder",
+  "description": "生徒のお悩みカードを作成するスキル",
+  "version": "1.0.0",
+  "author": {
+    "name": "sato-math-academy"
+  }
+}
