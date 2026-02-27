@@ -1,0 +1,8 @@
+{
+  "name": "kakomon-university-rebuild",
+  "description": "大学入試過去問の公式PDF取得・合冊分割・DB/R2 ingestワークフロー",
+  "version": "1.0.0",
+  "author": {
+    "name": "sato-math-academy"
+  }
+}
