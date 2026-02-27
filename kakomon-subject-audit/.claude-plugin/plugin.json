@@ -1,0 +1,8 @@
+{
+  "name": "kakomon-subject-audit",
+  "description": "過去問PDFの監査・修正ワークフロー（DB/公式サイト突合→Gap分析→修正）",
+  "version": "1.0.0",
+  "author": {
+    "name": "sato-math-academy"
+  }
+}
