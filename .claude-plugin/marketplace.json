@@ -35,6 +35,15 @@
       "author": {
         "name": "sato-math-academy"
       }
+    },
+    {
+      "name": "kakomon-split-gha",
+      "source": "./kakomon-split-gha",
+      "description": "大問分割を GitHub Actions で実行し、3-tierタグ付けを行うワークフロー",
+      "version": "1.0.0",
+      "author": {
+        "name": "sato-math-academy"
+      }
     }
   ]
 }
