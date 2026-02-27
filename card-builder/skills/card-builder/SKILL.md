@@ -265,6 +265,58 @@ interface CardData {
 
 ---
 
+### Phase 4.5: バッジ SVG 生成
+
+カード生成後、Gemini Pro で SVG バッジアイコンを生成する。
+**ラスター画像（WebP/PNG）は使わない — SVG に統一。**
+
+**手順:**
+
+1. カードの `category` + `title` からバッジのテーマを決定（例: 「clock and pen」「ruler and compass」等）
+2. Gemini API でインライン SVG コードを生成:
+   - モデル: 環境変数 `VITE_GEMINI_MODEL`（Doppler `sato-juku/dev`）— **Pro を使うこと（Flash は品質不足）**
+   - APIキー: 環境変数 `VITE_GEMINI_API_KEY`（同上）
+   - **`generationConfig.maxOutputTokens: 65536`**（Pro は thinking に大量トークンを消費するため、デフォルト 8192 では SVG が途中で切れる）
+   - **`thinkingConfig` は設定しない**（thinking を制限すると品質が著しく低下する）
+   - `temperature: 0.7`
+   - `systemInstruction`: `"Output ONLY raw SVG code. No markdown. No explanation."`
+   - プロンプト:
+     ```
+     Create a 48x48 circular badge SVG icon.
+     Theme: [テーマ].
+     viewBox="0 0 48 48", no width/height.
+     Background: circle cx=24 cy=24 r=23 fill=#009DE0.
+     Colors only: #009DE0 #2DD4BF #D6DE26 #334455 #ffffff.
+     Flat design, no gradients, no text.
+     ```
+   - **モデル名・APIキーは `doppler run -- ` 経由で注入する（ハードコード厳禁）**
+3. レスポンスから `<svg>...</svg>` を正規表現で抽出（markdown fence の除去も行う）
+4. `finishReason: STOP` を確認（それ以外は再生成）
+5. ブラウザプレビューで 64px / 128px 表示を目視確認
+6. `~/stsrjk-web-netlify/src/data/cardBadges.ts` にエントリ追加:
+   ```typescript
+   "{cardId}": { type: 'svg', content: `<svg>...</svg>` },
+   ```
+
+**バッジデータ型:**
+```typescript
+export type CardBadge = { type: 'svg'; content: string } | { type: 'image'; content: string };
+export const CARD_BADGES: Record<string, CardBadge> = { ... };
+```
+
+**品質ガイドライン:**
+- 1 枚ずつ生成 → プレビュー → 承認の PDCA で回す（一括生成しない）
+- Pro の thinking がデザイン品質に直結する — 絶対に `thinkingLevel: LOW` にしない
+- thinking 17,000〜20,000 トークン + 出力 800〜1,300 トークン = 1 枚あたり約 20,000 トークン消費が目安
+- SVG はベクターなので Retina 解像度問題がない（WebP/PNG より優位）
+
+**注意:**
+- モデル名をソースコードにハードコードしない
+- Flash モデルではデザイン品質が大幅に劣る — 必ず Pro を使う
+- `maxOutputTokens` をデフォルト（8192）のままにすると thinking でトークンを使い切り SVG が切れる
+
+---
+
 ### Phase 5: リファイン（競合ギャップ分析 → recommendPoints 最適化）
 
 #### Step 5a: 競合ギャップ分析
