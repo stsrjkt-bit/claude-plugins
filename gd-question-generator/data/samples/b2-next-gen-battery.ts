@@ -10,7 +10,7 @@ import type {
   KnowledgeCard,
   OpinionProblem,
   AxisProblem,
-} from "./b1-hydrogen-energy";
+} from "../types";
 
 // ---------------------------------------------------------------------------
 // テーマ情報
@@ -217,7 +217,7 @@ export const axisProblem: AxisProblem = {
   ],
   modelAxes: [
     {
-      axisName: "一つの技術が主流になる vs 複数の技術が共存する",
+      axisName: "新技術への期待 vs 既存技術・多様性の重視",
       group1: ["B", "C"],
       group2: ["A", "D"],
     },

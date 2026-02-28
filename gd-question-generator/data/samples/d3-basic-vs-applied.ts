@@ -10,7 +10,7 @@ import type {
   KnowledgeCard,
   OpinionProblem,
   AxisProblem,
-} from "./b1-hydrogen-energy";
+} from "../types";
 
 // ---------------------------------------------------------------------------
 // テーマ情報
@@ -194,9 +194,9 @@ export const axisProblem: AxisProblem = {
       group2: ["B", "D"],
     },
     {
-      axisName: "長期的な視点（将来の可能性） vs 短期的な視点（今の成果）",
-      group1: ["A", "B"],
-      group2: ["C", "D"],
+      axisName: "研究の目標（何を研究すべきか） vs 研究の体制（誰がどう届けるか）",
+      group1: ["A", "D"],
+      group2: ["B", "C"],
     },
   ],
 };

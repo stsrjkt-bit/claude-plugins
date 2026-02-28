@@ -1,7 +1,7 @@
 {
   "name": "gd-question-generator",
-  "description": "滋賀県立大学工学部材料化学科の後期GD試験の予想問題を生成するスキル",
-  "version": "1.0.0",
+  "description": "滋賀県立大学工学部材料化学科の後期GD試験対策プラグイン。予想問題生成（gd-question-generator）とアプリ搭載用データ変換（gd-data-builder）の2スキルを提供",
+  "version": "1.1.0",
   "author": {
     "name": "sato-math-academy"
   }

@@ -10,7 +10,7 @@ import type {
   KnowledgeCard,
   OpinionProblem,
   AxisProblem,
-} from "./b1-hydrogen-energy";
+} from "../types";
 
 // ---------------------------------------------------------------------------
 // テーマ情報
@@ -194,7 +194,7 @@ export const axisProblem: AxisProblem = {
       group2: ["B", "D"],
     },
     {
-      axisName: "発見の質（独創性） vs 発見の速さ（効率）",
+      axisName: "発見の源泉（何が生むか） vs 研究のプロセス（どう進めるか）",
       group1: ["A", "B"],
       group2: ["C", "D"],
     },

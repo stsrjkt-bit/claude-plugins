@@ -10,7 +10,7 @@ import type {
   KnowledgeCard,
   OpinionProblem,
   AxisProblem,
-} from "./b1-hydrogen-energy";
+} from "../types";
 
 // ---------------------------------------------------------------------------
 // テーマ情報
@@ -189,12 +189,12 @@ export const axisProblem: AxisProblem = {
   ],
   modelAxes: [
     {
-      axisName: "素材を変える vs 使い方を変える",
+      axisName: "素材の選択が鍵 vs 社会の仕組みが鍵",
       group1: ["A", "B"],
       group2: ["C", "D"],
     },
     {
-      axisName: "自然の力に頼る vs 科学技術で解決する",
+      axisName: "環境への配慮を優先 vs 人々の需要への対応を優先",
       group1: ["A", "D"],
       group2: ["B", "C"],
     },

@@ -10,7 +10,7 @@ import type {
   KnowledgeCard,
   OpinionProblem,
   AxisProblem,
-} from "./b1-hydrogen-energy";
+} from "../types";
 
 // ---------------------------------------------------------------------------
 // テーマ情報
@@ -21,7 +21,7 @@ export const theme: GDTheme = {
   name: "貴金属の価値",
   emoji: "💎",
   categoryId: "element",
-  year: 2028,
+  year: 2030,
 };
 
 // ---------------------------------------------------------------------------

@@ -10,7 +10,7 @@ import type {
   KnowledgeCard,
   OpinionProblem,
   AxisProblem,
-} from "./b1-hydrogen-energy";
+} from "../types";
 
 // ---------------------------------------------------------------------------
 // テーマ情報
@@ -222,9 +222,9 @@ export const axisProblem: AxisProblem = {
       group2: ["C", "D"],
     },
     {
-      axisName: "ゴミを「処分する」発想 vs ゴミを「活かす」発想",
-      group1: ["A", "C"],
-      group2: ["B", "D"],
+      axisName: "大規模プラントでの集中処理 vs 消費者側の分散的取り組み",
+      group1: ["A", "D"],
+      group2: ["B", "C"],
     },
   ],
 };
