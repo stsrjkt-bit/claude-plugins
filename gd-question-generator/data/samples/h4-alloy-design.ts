@@ -10,7 +10,7 @@ import type {
   KnowledgeCard,
   OpinionProblem,
   AxisProblem,
-} from "./b1-hydrogen-energy";
+} from "../types";
 
 // ---------------------------------------------------------------------------
 // テーマ情報
@@ -194,9 +194,9 @@ export const axisProblem: AxisProblem = {
       group2: ["B", "D"],
     },
     {
-      axisName: "インフラ（基盤）の視点 vs 応用（製品）の視点",
-      group1: ["A", "B"],
-      group2: ["C", "D"],
+      axisName: "金属の性能を追求する vs 社会・環境への影響を重視する",
+      group1: ["A", "D"],
+      group2: ["B", "C"],
     },
   ],
 };

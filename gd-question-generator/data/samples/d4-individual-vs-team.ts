@@ -10,7 +10,7 @@ import type {
   KnowledgeCard,
   OpinionProblem,
   AxisProblem,
-} from "./b1-hydrogen-energy";
+} from "../types";
 
 // ---------------------------------------------------------------------------
 // テーマ情報
