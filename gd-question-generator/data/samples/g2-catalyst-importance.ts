@@ -29,7 +29,7 @@ export const theme: GDTheme = {
 // ---------------------------------------------------------------------------
 
 export const knowledgeCards: KnowledgeCard[] = [
-  // --- daily_impact × 3 ---
+  // --- daily_impact × 2 ---
   {
     id: "g2_card1",
     themeId: "g2",
@@ -47,9 +47,9 @@ export const knowledgeCards: KnowledgeCard[] = [
   {
     id: "g2_card3",
     themeId: "g2",
-    front: "触媒は高校化学のどこで出てくる？",
-    back: "反応速度の単元で「活性化エネルギーを下げて反応を速くする」と習う。触媒自身は反応の前後で変化しない。酸化マンガン(IV)による過酸化水素の分解が定番実験",
-    cardType: "daily_impact",
+    front: "石油精製で使われる触媒は？",
+    back: "接触改質（リフォーミング）ではPt触媒でオクタン価の低いナフサを高品質ガソリンに変える。流動接触分解（FCC）ではゼオライト触媒で重油を軽油・ガソリンに分解。ガソリンスタンドの燃料のほぼすべてが触媒の力で作られている",
+    cardType: "product",
   },
   // --- number × 2 ---
   {
@@ -66,7 +66,7 @@ export const knowledgeCards: KnowledgeCard[] = [
     back: "触媒がないと数百年かかる反応を、数秒で完了させることもある。酵素（生体触媒）は化学触媒の100万〜1億倍の速度で反応を進めるものもある",
     cardType: "number",
   },
-  // --- product × 1 ---
+  // --- product × 2 ---
   {
     id: "g2_card6",
     themeId: "g2",

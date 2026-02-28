@@ -64,7 +64,7 @@ export const knowledgeCards: KnowledgeCard[] = [
     id: "c3_card5",
     themeId: "c3",
     front: "排煙脱硫はどうやってSO₂を除去する？",
-    back: "石灰石（CaCO₃）のスラリーにSO₂を吹き込む。CaCO₃ + SO₂ + ½O₂ + 2H₂O → CaSO₄·2H₂O（石膏）。副産物の石膏はセメントや壁材に再利用できる",
+    back: "石灰石（CaCO₃）のスラリーにSO₂を吹き込む。CaCO₃ + SO₂ + ½O₂ + 2H₂O → CaSO₄·2H₂O（石膏）+ CO₂。副産物の石膏はセメントや壁材に再利用できる",
     cardType: "product",
   },
   {
@@ -217,7 +217,7 @@ export const axisProblem: AxisProblem = {
   ],
   modelAxes: [
     {
-      axisName: "個別物質の対策 vs 根本原因の対策",
+      axisName: "気体汚染物質への対策 vs 粒子・根本原因への対策",
       group1: ["A", "C"],
       group2: ["B", "D"],
     },

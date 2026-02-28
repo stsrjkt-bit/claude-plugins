@@ -222,9 +222,9 @@ export const axisProblem: AxisProblem = {
       group2: ["C", "D"],
     },
     {
-      axisName: "目に見える材料 vs 目に見えない材料",
-      group1: ["A", "B"],
-      group2: ["C", "D"],
+      axisName: "無機材料 vs 有機材料（高分子）",
+      group1: ["A", "C"],
+      group2: ["B", "D"],
     },
   ],
 };

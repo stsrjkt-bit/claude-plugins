@@ -222,9 +222,9 @@ export const axisProblem: AxisProblem = {
       group2: ["A", "D"],
     },
     {
-      axisName: "量（大量に使われる）で測る vs 質（代替できない機能）で測る",
-      group1: ["B", "C"],
-      group2: ["A", "D"],
+      axisName: "構造・容器として使う vs 機能（電気・光・熱）で使う",
+      group1: ["A", "B"],
+      group2: ["C", "D"],
     },
   ],
 };

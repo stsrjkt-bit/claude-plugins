@@ -59,12 +59,12 @@ export const knowledgeCards: KnowledgeCard[] = [
     back: "高レベル放射性廃棄物に含まれるプルトニウム239の半減期は約2万4千年。安全なレベルになるまで約10万年かかるとされ、その間ずっと管理が必要",
     cardType: "number",
   },
-  // --- product × 1 ---
+  // --- product × 2 ---
   {
     id: "b4_card5",
     themeId: "b4",
     front: "放射性同位体は発電以外にどう役立っている？",
-    back: "医療でのがん治療（放射線治療）、レントゲンやCTスキャン、農作物の品種改良、年代測定（C-14で遺跡の年代を調べる）。放射線は「使い方次第」で社会に大きく貢献している",
+    back: "医療でのがん治療（放射線治療）、PETスキャン（F-18標識薬でがんを画像化）、農作物の品種改良、年代測定（C-14で遺跡の年代を調べる）。放射線は「使い方次第」で社会に大きく貢献している",
     cardType: "product",
   },
   // --- comparison × 1 ---
@@ -75,13 +75,13 @@ export const knowledgeCards: KnowledgeCard[] = [
     back: "発電時のCO₂排出：原子力はほぼゼロ、石炭火力は1kWhあたり約940 g。原子力は建設や燃料加工を含めても約20 g/kWh。太陽光（約40 g/kWh）と同等レベルの低さ",
     cardType: "comparison",
   },
-  // --- daily_impact × 1 ---
+  // --- product × 2 ---
   {
     id: "b4_card7",
     themeId: "b4",
-    front: "福島第一原発事故で何が起きた？",
-    back: "2011年3月、地震と津波で冷却機能が失われ、炉心溶融（メルトダウン）が発生。放射性物質が広範囲に拡散し、約16万人が避難。事故から10年以上経っても帰還困難区域が残る",
-    cardType: "daily_impact",
+    front: "小型モジュール炉（SMR）とは？",
+    back: "従来の大型原発に代わる次世代原子炉。出力が小さく工場で量産可能。冷却も自然循環で安全性が高い。アメリカのNuScale社やイギリスのRolls-Royceが開発中。日本でも2030年代の導入を検討",
+    cardType: "product",
   },
 ];
 

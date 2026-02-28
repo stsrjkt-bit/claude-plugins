@@ -29,7 +29,7 @@ export const theme: GDTheme = {
 // ---------------------------------------------------------------------------
 
 export const knowledgeCards: KnowledgeCard[] = [
-  // --- daily_impact × 3 ---
+  // --- daily_impact × 2 ---
   {
     id: "b3_card1",
     themeId: "b3",
@@ -47,9 +47,9 @@ export const knowledgeCards: KnowledgeCard[] = [
   {
     id: "b3_card3",
     themeId: "b3",
-    front: "太陽光発電が止まると何が困る？",
-    back: "夜間や曇りの日は発電できない。工場の24時間稼働や病院の電源確保が難しい。蓄電池との組み合わせか、他の発電方法でバックアップが必要になる",
-    cardType: "daily_impact",
+    front: "ペロブスカイト太陽電池とは？",
+    back: "フィルムのように薄く軽い次世代太陽電池。ビルの壁や窓にも貼れる。原料が安く、塗布で製造できる。日本発の技術で実用化が進む。シリコン型と二層構造にすれば効率30%超も視野に入る",
+    cardType: "product",
   },
   // --- number × 2 ---
   {
@@ -66,7 +66,7 @@ export const knowledgeCards: KnowledgeCard[] = [
     back: "約40〜60%。火力発電（約35〜40%）より高い。さらに発電時の熱もお湯として利用すれば、総合効率は約80〜90%になる（エネファームの仕組み）",
     cardType: "number",
   },
-  // --- product × 1 ---
+  // --- product × 2 ---
   {
     id: "b3_card6",
     themeId: "b3",

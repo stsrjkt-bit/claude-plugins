@@ -29,7 +29,7 @@ export const theme: GDTheme = {
 // ---------------------------------------------------------------------------
 
 export const knowledgeCards: KnowledgeCard[] = [
-  // --- daily_impact × 3 ---
+  // --- daily_impact × 2 ---
   {
     id: "h2_card1",
     themeId: "h2",
@@ -47,9 +47,9 @@ export const knowledgeCards: KnowledgeCard[] = [
   {
     id: "h2_card3",
     themeId: "h2",
-    front: "合成繊維を洗濯するとどうなる？",
-    back: "1回の洗濯で合成繊維の服から数十万本のマイクロファイバー（微小プラスチック）が出る。下水処理で完全には除去できず、海に流れる。海洋マイクロプラスチックの約35%が繊維由来",
-    cardType: "daily_impact",
+    front: "リサイクル繊維の具体例は？",
+    back: "ペットボトルを溶かしてポリエステル繊維にする「ボトルtoファイバー」技術。ユニクロのフリースやパタゴニアの製品で採用。使用済み衣類を化学的にモノマーに戻す「ケミカルリサイクル」も帝人が実用化。繊維の循環利用が進んでいる",
+    cardType: "product",
   },
   // --- number × 2 ---
   {
@@ -66,7 +66,7 @@ export const knowledgeCards: KnowledgeCard[] = [
     back: "引張強度：絹は約0.5 GPa、ナイロンは約0.9 GPa、炭素繊維は約3.5 GPa。合成繊維は天然繊維より強いものが多いが、肌触りや吸湿性は天然繊維が優れる",
     cardType: "number",
   },
-  // --- product × 1 ---
+  // --- product × 2 ---
   {
     id: "h2_card6",
     themeId: "h2",

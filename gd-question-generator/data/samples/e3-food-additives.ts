@@ -29,7 +29,7 @@ export const theme: GDTheme = {
 // ---------------------------------------------------------------------------
 
 export const knowledgeCards: KnowledgeCard[] = [
-  // --- daily_impact × 3 ---
+  // --- daily_impact × 2 ---
   {
     id: "e3_card1",
     themeId: "e3",
@@ -47,9 +47,9 @@ export const knowledgeCards: KnowledgeCard[] = [
   {
     id: "e3_card3",
     themeId: "e3",
-    front: "「無添加」と書いてある食品は本当に安全？",
-    back: "必ずしもそうとは限らない。保存料を使わない代わりに塩分を増やしたり、「無添加」に法的な定義がなく曖昧な表示も多い。添加物の有無だけで安全性は判断できない",
-    cardType: "daily_impact",
+    front: "代表的な保存料の具体例は？",
+    back: "ソルビン酸（カビ・酵母の増殖を抑制、ハムやチーズに使用）。安息香酸ナトリウム（飲料・醤油に使用、酸性条件で効果大）。亜硝酸ナトリウム（ハム・ソーセージの発色剤兼ボツリヌス菌抑制）。いずれもADIが設定され使用量は厳しく規制されている",
+    cardType: "product",
   },
   // --- number × 2 ---
   {
@@ -66,7 +66,7 @@ export const knowledgeCards: KnowledgeCard[] = [
     back: "動物実験で「一生食べ続けても影響がない量（NOAEL）」を求め、さらに100分の1にした量をADI（1日摂取許容量）とする。安全係数100倍のマージンがある",
     cardType: "number",
   },
-  // --- product × 1 ---
+  // --- product × 2 ---
   {
     id: "e3_card6",
     themeId: "e3",
@@ -194,9 +194,9 @@ export const axisProblem: AxisProblem = {
       group2: ["B", "D"],
     },
     {
-      axisName: "科学・経済の合理性を重視 vs 消費者の感覚・権利を重視",
-      group1: ["A", "C"],
-      group2: ["B", "D"],
+      axisName: "食品そのものの質を議論 vs 食品を取り巻く制度・環境を議論",
+      group1: ["A", "B"],
+      group2: ["C", "D"],
     },
   ],
 };

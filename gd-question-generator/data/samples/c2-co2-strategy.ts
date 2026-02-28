@@ -29,7 +29,7 @@ export const theme: GDTheme = {
 // ---------------------------------------------------------------------------
 
 export const knowledgeCards: KnowledgeCard[] = [
-  // --- daily_impact × 3 ---
+  // --- daily_impact × 2 ---
   {
     id: "c2_card1",
     themeId: "c2",
@@ -47,9 +47,9 @@ export const knowledgeCards: KnowledgeCard[] = [
   {
     id: "c2_card3",
     themeId: "c2",
-    front: "自分の生活でCO₂はどこから出ている？",
-    back: "電気（火力発電）・ガス・車のガソリンが三大発生源。日本人1人あたり年間約8トンのCO₂を排出。そのうち約半分が電力と交通由来",
-    cardType: "daily_impact",
+    front: "DAC（直接空気回収）装置とは？",
+    back: "空気中のCO₂を直接吸収する装置。アイスランドのClimeworks社が世界最大のDACプラント「Orca」を稼働。年間4000トンのCO₂を回収。ただしコストは1トンあたり約600〜1000ドルと高額で、大幅な低下が課題",
+    cardType: "product",
   },
   // --- number × 2 ---
   {
@@ -66,7 +66,7 @@ export const knowledgeCards: KnowledgeCard[] = [
     back: "世界全体で年間約4000万トン（2024年時点）。排出量370億トンの約0.1%。1000倍近くスケールアップしないと排出量に追いつかない計算",
     cardType: "number",
   },
-  // --- product × 1 ---
+  // --- product × 2 ---
   {
     id: "c2_card6",
     themeId: "c2",

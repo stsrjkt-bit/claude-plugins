@@ -222,9 +222,9 @@ export const axisProblem: AxisProblem = {
       group2: ["C", "D"],
     },
     {
-      axisName: "実績ある既存技術を重視 vs 将来の技術革新を重視",
-      group1: ["A", "B"],
-      group2: ["C", "D"],
+      axisName: "広範囲に効果が持続する vs その場で即効果を発揮する",
+      group1: ["A", "D"],
+      group2: ["B", "C"],
     },
   ],
 };

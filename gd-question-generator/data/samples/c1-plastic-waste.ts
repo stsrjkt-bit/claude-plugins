@@ -29,7 +29,7 @@ export const theme: GDTheme = {
 // ---------------------------------------------------------------------------
 
 export const knowledgeCards: KnowledgeCard[] = [
-  // --- daily_impact × 3 ---
+  // --- daily_impact × 2 ---
   {
     id: "c1_card1",
     themeId: "c1",
@@ -47,9 +47,9 @@ export const knowledgeCards: KnowledgeCard[] = [
   {
     id: "c1_card3",
     themeId: "c1",
-    front: "プラスチックは何から作られている？",
-    back: "主に石油（ナフサ）から作る。ナフサを分解してエチレンやプロピレンを作り、付加重合や縮合重合で高分子にする。日本の石油消費量の約3%がプラスチック原料",
-    cardType: "daily_impact",
+    front: "ケミカルリサイクルの具体例は？",
+    back: "ペットボトルを化学的にモノマー（原料）に戻して再びペットボトルを作る「ボトルtoボトル」技術。サントリーやキリンが実用化。品質が落ちないため何度でも循環可能。焼却に比べCO₂排出を約60%削減",
+    cardType: "product",
   },
   // --- number × 2 ---
   {
@@ -66,7 +66,7 @@ export const knowledgeCards: KnowledgeCard[] = [
     back: "約4億トン。そのうち海に流出するのは年間約800万トン。このペースだと2050年には海のプラスチックが魚の重量を超えるとも言われている",
     cardType: "number",
   },
-  // --- product × 1 ---
+  // --- product × 2 ---
   {
     id: "c1_card6",
     themeId: "c1",

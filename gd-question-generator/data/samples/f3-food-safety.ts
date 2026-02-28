@@ -59,7 +59,7 @@ export const knowledgeCards: KnowledgeCard[] = [
     back: "ガスクロマトグラフィー質量分析法（GC-MS）でppb（10億分の1）レベルまで検出可能。これは25mプール満杯の水に目薬1滴を垂らした程度の超微量。分析化学の精度が食の安全を支えている",
     cardType: "number",
   },
-  // --- product × 1 ---
+  // --- product × 2 ---
   {
     id: "f3_card5",
     themeId: "f3",
@@ -67,7 +67,7 @@ export const knowledgeCards: KnowledgeCard[] = [
     back: "GC-MS（ガスクロマトグラフィー質量分析）：揮発性の農薬を分離・検出。HPLC（高速液体クロマトグラフィー）：食品添加物や水溶性物質の分析に使用。PCR法：微生物のDNAを増幅して病原菌を特定",
     cardType: "product",
   },
-  // --- comparison × 2 ---
+  // --- comparison × 1 ---
   {
     id: "f3_card6",
     themeId: "f3",
@@ -78,9 +78,9 @@ export const knowledgeCards: KnowledgeCard[] = [
   {
     id: "f3_card7",
     themeId: "f3",
-    front: "「化学的検査」と「微生物検査」は何が違う？",
-    back: "化学的検査：農薬や添加物など「化学物質」を分析機器で検出。結果が数時間〜1日で出る。微生物検査：サルモネラ菌やO157などの「生き物」を培養して検出。培養に1〜3日かかるが、PCR法なら数時間に短縮可能",
-    cardType: "comparison",
+    front: "食品衛生法で義務化されたHACCPとは？",
+    back: "Hazard Analysis and Critical Control Point（危害分析重要管理点）。原材料の入荷から出荷まで全工程で危害要因を分析し、重要な管理点を継続的に監視する仕組み。2021年に日本で完全義務化。化学的・微生物的検査を体系的に組み込んだ食品安全管理システム",
+    cardType: "product",
   },
 ];
 

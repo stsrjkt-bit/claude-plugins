@@ -92,7 +92,7 @@ export const opinionProblem: OpinionProblem = {
   id: "a4_opinion",
   themeId: "a4",
   question:
-    "金(Au)・銀(Ag)・銅(Cu)などの貴金属は、工業材料としての価値と装飾品としての価値のどちらが今後より重要になるか。自分の考えを述べよ。",
+    "金(Au)・銀(Ag)などの貴金属や銅(Cu)のような有用金属は、工業材料としての価値と装飾品としての価値のどちらが今後より重要になるか。自分の考えを述べよ。",
   choices: ["工業材料としての価値", "装飾品としての価値"],
   modelAnswers: {
     "工業材料としての価値": {

@@ -217,7 +217,7 @@ export const axisProblem: AxisProblem = {
   ],
   modelAxes: [
     {
-      axisName: "浄水技術で解決 vs 汚染を防いで解決",
+      axisName: "病原菌・微生物への対策 vs 化学物質・汚染源への対策",
       group1: ["A", "B"],
       group2: ["C", "D"],
     },

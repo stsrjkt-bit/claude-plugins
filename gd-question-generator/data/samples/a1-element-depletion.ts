@@ -29,7 +29,7 @@ export const theme: GDTheme = {
 // ---------------------------------------------------------------------------
 
 export const knowledgeCards: KnowledgeCard[] = [
-  // --- daily_impact × 3 ---
+  // --- daily_impact × 2 ---
   {
     id: "a1_card1",
     themeId: "a1",
@@ -47,9 +47,9 @@ export const knowledgeCards: KnowledgeCard[] = [
   {
     id: "a1_card3",
     themeId: "a1",
-    front: "銅(Cu)がなくなったら何が困る？",
-    back: "電線・送電線が作れず電気を届けられなくなる。家庭のコンセントから発電所の送電網まで、電気の通り道はほぼすべて銅。水道管やエアコンの配管にも使われている",
-    cardType: "daily_impact",
+    front: "銅(Cu)が使われている工業製品は？",
+    back: "電線・送電線（電気の通り道はほぼすべて銅）、エアコンや冷蔵庫の熱交換器（銅管）、プリント基板の配線。銅は電気伝導率が銀に次いで2位で、コストと性能のバランスが最も良い金属",
+    cardType: "product",
   },
   // --- number × 2 ---
   {
@@ -66,7 +66,7 @@ export const knowledgeCards: KnowledgeCard[] = [
     back: "体重60kgの人で約1kg（体重の約1.5〜2%）。その99%が骨と歯に存在。残り1%が血液や神経の働きに不可欠。牛乳1杯（200mL）で約220mgのCaを摂取できる",
     cardType: "number",
   },
-  // --- product × 1 ---
+  // --- product × 2 ---
   {
     id: "a1_card6",
     themeId: "a1",

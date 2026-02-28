@@ -29,7 +29,7 @@ export const theme: GDTheme = {
 // ---------------------------------------------------------------------------
 
 export const knowledgeCards: KnowledgeCard[] = [
-  // --- daily_impact × 3 ---
+  // --- daily_impact × 2 ---
   {
     id: "a5_card1",
     themeId: "a5",
@@ -47,9 +47,9 @@ export const knowledgeCards: KnowledgeCard[] = [
   {
     id: "a5_card3",
     themeId: "a5",
-    front: "カルシウム(Ca)は骨以外にも役割がある？",
-    back: "血液を固める（止血）、筋肉を動かす、神経の信号を伝える──すべてにCaが必要。骨に蓄えたCaを必要に応じて血液に溶かして使っている。不足すると骨からCaが溶け出して骨がスカスカに",
-    cardType: "daily_impact",
+    front: "カルシウムを補う製品にはどんなものがある？",
+    back: "カルシウム強化牛乳・豆乳（CaCO₃を添加）、サプリメント（炭酸カルシウムが主成分）、骨粗鬆症治療薬。学校給食の牛乳は「1日のCa必要量の約1/3」を補う設計。経口補水液にもCa²⁺が含まれる",
+    cardType: "product",
   },
   // --- number × 2 ---
   {
@@ -66,7 +66,7 @@ export const knowledgeCards: KnowledgeCard[] = [
     back: "体重60kgの人で Na：約100g、K：約140g、Ca：約1000g。Caが圧倒的に多い（大部分が骨に）。NaとKは血液や細胞液に溶けたイオンの状態で存在",
     cardType: "number",
   },
-  // --- product × 1 ---
+  // --- product × 2 ---
   {
     id: "a5_card6",
     themeId: "a5",
