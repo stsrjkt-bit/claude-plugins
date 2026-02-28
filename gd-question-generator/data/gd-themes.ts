@@ -9,22 +9,26 @@
 // 型定義
 // ---------------------------------------------------------------------------
 
-export type QuestionPattern =
-  | "pattern1" // 枯渇型（2025年型）
-  | "pattern2" // 二者択一型（2024年型）
-  | "pattern3" // 三者択一型
-  | "pattern4" // 選択＋将来展望型
-  | "pattern5"; // 是非判断型（2023年型）
+export const QUESTION_PATTERN_IDS = [
+  "pattern1", // 枯渇型（2025年型）
+  "pattern2", // 二者択一型（2024年型）
+  "pattern3", // 三者択一型
+  "pattern4", // 選択＋将来展望型
+  "pattern5", // 是非判断型（2023年型）
+] as const;
+export type QuestionPattern = (typeof QUESTION_PATTERN_IDS)[number];
 
-export type CategoryId =
-  | "element" // A 元素・資源
-  | "energy" // B エネルギー・電池
-  | "environment" // C 環境・リサイクル
-  | "methodology" // D 化学の学び方・方法論
-  | "medical" // E 医療・生命
-  | "food" // F 食・農業・水
-  | "industry" // G 産業・安全
-  | "material"; // H 材料・素材
+export const CATEGORY_IDS = [
+  "element", // A 元素・資源
+  "energy", // B エネルギー・電池
+  "environment", // C 環境・リサイクル
+  "methodology", // D 化学の学び方・方法論
+  "medical", // E 医療・生命
+  "food", // F 食・農業・水
+  "industry", // G 産業・安全
+  "material", // H 材料・素材
+] as const;
+export type CategoryId = (typeof CATEGORY_IDS)[number];
 
 export interface GdTheme {
   /** テーマID（カテゴリ文字＋番号） */
