@@ -210,7 +210,7 @@ user_invocable: true
 
 ### Phase 0: データ読み込み
 
-1. `data/gd-themes.ts` を読み込み、既存のテーマ定義を確認する
+1. `~/claude-plugins/gd-question-generator/data/gd-themes.ts` を読み込み、既存のテーマ定義を確認する
 2. カテゴリごとのテーマ数を集計し、カバレッジを把握する
 
 ### Phase 1: テーマ生成
@@ -254,7 +254,7 @@ question: "水素エネルギーの普及において、製造・貯蔵・利用
 choices: ["製造", "貯蔵", "利用"]
 ```
 
-ユーザーが希望する場合、`data/gd-themes.ts` のTypeScript定数ファイルとしても出力する。
+ユーザーが希望する場合、`~/claude-plugins/gd-question-generator/data/gd-themes.ts` のTypeScript定数ファイルとしても出力する。
 
 ---
 
