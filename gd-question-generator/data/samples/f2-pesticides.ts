@@ -194,9 +194,9 @@ export const axisProblem: AxisProblem = {
       group2: ["B", "D"],
     },
     {
-      axisName: "短期的な現実を重視 vs 長期的な持続可能性を重視",
-      group1: ["A", "B"],
-      group2: ["C", "D"],
+      axisName: "農薬の効果・生産性への影響 vs 安全性・環境リスクへの影響",
+      group1: ["A", "D"],
+      group2: ["B", "C"],
     },
   ],
 };

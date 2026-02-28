@@ -194,7 +194,7 @@ export const axisProblem: AxisProblem = {
       group2: ["B", "C"],
     },
     {
-      axisName: "探索型（広く探す） vs 設計型（狙って作る）",
+      axisName: "天然物の価値に注目 vs 計算・予測技術に注目",
       group1: ["A", "C"],
       group2: ["B", "D"],
     },

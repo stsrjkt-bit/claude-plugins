@@ -217,7 +217,7 @@ export const axisProblem: AxisProblem = {
   ],
   modelAxes: [
     {
-      axisName: "気体汚染物質への対策 vs 粒子・根本原因への対策",
+      axisName: "特定の化学汚染物質の除去 vs 包括的な汚染対策",
       group1: ["A", "C"],
       group2: ["B", "D"],
     },

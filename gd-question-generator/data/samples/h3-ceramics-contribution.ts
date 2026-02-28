@@ -222,7 +222,7 @@ export const axisProblem: AxisProblem = {
       group2: ["A", "D"],
     },
     {
-      axisName: "構造・容器として使う vs 機能（電気・光・熱）で使う",
+      axisName: "日常に不可欠な汎用素材 vs 専門性・独自性のある素材",
       group1: ["A", "B"],
       group2: ["C", "D"],
     },

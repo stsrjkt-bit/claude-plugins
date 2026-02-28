@@ -222,7 +222,7 @@ export const axisProblem: AxisProblem = {
       group2: ["B", "D"],
     },
     {
-      axisName: "技術で解決できる vs お金で解決できる",
+      axisName: "経済的な課題 vs 技術的・物理的な課題",
       group1: ["A", "D"],
       group2: ["B", "C"],
     },
