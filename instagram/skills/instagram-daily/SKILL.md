@@ -134,8 +134,8 @@ AskUserQuestion で入力された生徒名を `STUDENT_NAME` 変数として保
 
 撮影したスクショを納品先フォルダにコピーする:
 ```bash
-cp /tmp/atama_timeline.png "/mnt/c/Users/stsrj/Desktop/Instagram投稿/atama-timeline-$(date +%Y%m%d).png"
-cp /tmp/atama_mylevel.png "/mnt/c/Users/stsrj/Desktop/Instagram投稿/atama-mylevel-$(date +%Y%m%d).png"
+cp /tmp/atama_timeline.png "/mnt/c/Users/stsrj/Desktop/Instagram投稿/atama-timeline-$(date +%Y%m%d-%H%M%S).png"
+cp /tmp/atama_mylevel.png "/mnt/c/Users/stsrj/Desktop/Instagram投稿/atama-mylevel-$(date +%Y%m%d-%H%M%S).png"
 ```
 
 ---
@@ -259,7 +259,7 @@ SVGコードのみを ```svg ``` で囲んで出力せよ。
    ```
 2. Read ツールで生成された画像ファイルを読み込んで表示する
 3. キャプションを .txt ファイルとして納品先に保存する
-   - ファイル名: `sato-math-post-{YYYY-MM-DD}-caption.txt`
+   - ファイル名: `sato-math-post-{タイムスタンプ}-caption.txt`
 4. 生成結果を画面に表示する
 
 ### 画面表示フォーマット
