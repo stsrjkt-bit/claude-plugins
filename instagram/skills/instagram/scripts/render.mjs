@@ -83,9 +83,8 @@ async function main() {
 
     // Headline and subhead
     document.getElementById('headline').textContent = imageText.headline;
-    const subheadEl = document.getElementById('subhead');
-    subheadEl.textContent = imageText.subhead;
-    subheadEl.style.backgroundColor = template.highlightBg;
+    document.getElementById('subhead').textContent = imageText.subhead;
+    document.getElementById('subhead-highlight').style.backgroundColor = template.highlightBg;
 
     // Body
     document.getElementById('body').textContent = imageText.body;
