@@ -1,0 +1,8 @@
+{
+  "name": "atama",
+  "description": "atama+ COACH 操作（学習データ取得→つまずき分析→補習プリント作成→PDF出力）",
+  "version": "1.0.0",
+  "author": {
+    "name": "sato-math-academy"
+  }
+}

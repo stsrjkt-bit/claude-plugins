@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Preview - さとう数理塾</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen py-8 px-4">
+  <div id="app" class="max-w-2xl mx-auto space-y-6"></div>
+
+  <script>
+    // Card data will be injected below
+    const CARDS = __CARD_DATA__;
+
+    const app = document.getElementById('app');
+    const openStates = {};
+    const currentMonth = new Date().getMonth() + 1; // 1-12
+
+    function isTagVisible(tag) {
+      if (!tag.displayPeriod) return true;
+      const { start, end } = tag.displayPeriod;
+      if (start <= end) return currentMonth >= start && currentMonth <= end;
+      return currentMonth >= start || currentMonth <= end; // 年またぎ
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+
+    function renderCards() {
+      app.innerHTML = '';
+
+      // Header
+      const header = document.createElement('div');
+      header.className = 'text-center mb-8';
+      header.innerHTML = `
+        <h1 class="text-2xl font-bold text-slate-700 mb-2">Card Preview</h1>
+        <p class="text-sm text-slate-500">${CARDS.length} card(s) generated</p>
+      `;
+      app.appendChild(header);
+
+      CARDS.forEach((card, idx) => {
+        const isOpen = openStates[idx] || false;
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = renderCard(card, idx, isOpen);
+        app.appendChild(wrapper.firstElementChild);
+      });
+
+      // Initialize Lucide icons
+      if (window.lucide) lucide.createIcons();
+
+      // Bind click events
+      document.querySelectorAll('[data-card-toggle]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          const idx = parseInt(el.dataset.cardToggle);
+          openStates[idx] = !openStates[idx];
+          renderCards();
+        });
+      });
+
+      document.querySelectorAll('[data-faq-toggle]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const panel = el.nextElementSibling;
+          const chevron = el.querySelector('[data-faq-chevron]');
+          if (panel.style.display === 'none' || !panel.style.display) {
+            panel.style.display = 'block';
+            if (chevron) chevron.style.transform = 'rotate(180deg)';
+          } else {
+            panel.style.display = 'none';
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
+          }
+        });
+      });
+    }
+
+    function renderCard(card, idx, isOpen) {
+      const periodText = card.displayPeriod ? `${card.displayPeriod.start}月-${card.displayPeriod.end}月` : '';
+
+      const gradeTagsHtml = (card.gradeTags || []).filter(isTagVisible).map(gt =>
+        `<span class="text-xs font-bold text-white bg-[#009DE0] px-2.5 py-1 rounded-md shadow-sm">${escapeHtml(gt.label)}</span>`
+      ).join('');
+
+      const tagsHtml = (card.tags || []).filter(t => t.label).map(tag =>
+        `<span class="text-[11px] font-bold text-[#009DE0] bg-[#F0F9FF] border border-[#BAE6FD] px-2 py-1 rounded-md">#${escapeHtml(tag.label)}</span>`
+      ).join('');
+
+      const quickAnswersHtml = (card.quickAnswers || []).map(qa => `
+        <div class="flex gap-4 items-start bg-white rounded-lg p-3 border border-slate-100 shadow-sm min-h-[3rem]">
+          ${qa.label ? `<span class="shrink-0 text-xs font-bold text-[#009DE0] bg-[#009DE0]/10 px-2 py-1 rounded">${escapeHtml(qa.label)}</span>` : ''}
+          <p class="text-sm font-bold text-[#334455] pt-0.5 leading-snug w-full break-words">${escapeHtml(qa.text)}</p>
+        </div>
+      `).join('');
+
+      const faqHtml = (card.actions?.faq || []).map((item, fIdx) => `
+        <div class="rounded-lg border border-[#E2E8F0] bg-white overflow-hidden">
+          <button data-faq-toggle class="w-full text-left px-4 py-3 text-sm font-medium hover:bg-[#F8FAFC] flex justify-between items-center transition-colors min-h-[3rem]">
+            <span class="flex gap-3 items-center w-full">
+              <i data-lucide="help-circle" class="w-4 h-4 text-[#009DE0] shrink-0"></i>
+              <span class="text-[#334455] w-full break-words">${escapeHtml(item.q?.text)}</span>
+            </span>
+            <i data-lucide="chevron-down" data-faq-chevron class="w-3.5 h-3.5 text-[#94A3B8] shrink-0 transition-transform duration-200"></i>
+          </button>
+          <div style="display:none" class="px-4 py-3 bg-[#F0F9FF] text-sm text-[#475569] pl-9 leading-relaxed border-t border-[#E2E8F0] min-h-[2rem] break-words">
+            ${escapeHtml(item.a?.text)}
+          </div>
+        </div>
+      `).join('');
+
+      const recommendPointsHtml = (card.actions?.recommendPoints || []).filter(p => p.text).map((point, pIdx) => `
+        <li class="flex items-start gap-2 text-sm text-teal-800">
+          <span class="font-bold text-teal-600">${pIdx + 1}.</span>
+          <span>${escapeHtml(point.text)}</span>
+        </li>
+      `).join('');
+
+      const hasRecommendPoints = recommendPointsHtml.length > 0;
+
+      const detailHtml = `
+        <div class="space-y-6 text-[#334455] animate-fade-in">
+          <!-- Quick Answers -->
+          <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
+            <h4 class="text-xs font-bold text-slate-500 uppercase mb-3 px-1">具体的な指導ステップ</h4>
+            <div class="space-y-3">${quickAnswersHtml}</div>
+          </div>
+
+          <div class="grid gap-4">
+            <!-- Guide -->
+            <div class="px-1">
+              <h4 class="font-bold text-[#334455] flex items-center gap-2 mb-3 text-base">
+                <i data-lucide="book-open" class="w-5 h-5 text-[#D6DE26]"></i>
+                ${escapeHtml(card.actions?.guide?.title?.text || 'ガイドタイトル')}
+              </h4>
+              <p class="text-sm text-[#475569] leading-relaxed pl-7 border-l-2 border-[#D6DE26] min-h-[4rem] break-words">${escapeHtml(card.actions?.guide?.content?.text)}</p>
+            </div>
+
+            <!-- FAQ -->
+            <div class="border-t border-[#E2E8F0] pt-4 mt-2">
+              <h4 class="font-bold text-[#64748B] text-xs mb-3 px-1">よくある質問</h4>
+              <div class="space-y-2">${faqHtml}</div>
+            </div>
+
+            <!-- Recommend Points -->
+            ${hasRecommendPoints ? `
+            <div class="border-t border-[#E2E8F0] pt-4 mt-2">
+              <div class="p-4 bg-teal-50 rounded-xl border border-teal-100">
+                <h4 class="text-sm font-bold text-teal-700 mb-3 flex items-center gap-2">
+                  <i data-lucide="check-circle" class="w-4 h-4"></i>
+                  当塾のおすすめポイント
+                </h4>
+                <ul class="space-y-2">${recommendPointsHtml}</ul>
+              </div>
+            </div>
+            ` : ''}
+
+            <!-- Nav Menu -->
+            <div class="border-t border-[#E2E8F0] pt-4 mt-2">
+              <h4 class="font-bold text-[#64748B] text-xs mb-3 px-1">メニュー</h4>
+              <div class="grid grid-cols-4 gap-3">
+                ${[
+                  { label: '学び方', icon: 'book-open', url: '/learning-style' },
+                  { label: '通い方', icon: 'footprints', url: '/study-style' },
+                  { label: '教室情報', icon: 'map-pin', url: '/' },
+                  { label: '無料体験', icon: 'sparkles', url: '/trial' },
+                  { label: '学習相談', icon: 'message-circle-question', url: '/counseling' },
+                  { label: '入塾方法', icon: 'file-signature', url: '/join' },
+                  { label: 'LINE', icon: 'message-circle', url: 'https://lin.ee/blKCpXC' },
+                  { label: 'お休み', icon: 'calendar', url: '#' },
+                ].map(item => `
+                  <a href="${item.url}" class="flex flex-col items-center justify-center gap-2 p-2 rounded-xl hover:bg-slate-50 transition-colors group text-center">
+                    <div class="p-2 bg-[#F0F9FF] text-[#009DE0] rounded-full group-hover:bg-[#009DE0] group-hover:text-white transition-colors">
+                      <i data-lucide="${item.icon}" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-[#334455]">${item.label}</span>
+                  </a>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      return `
+        <div class="w-full">
+          <div
+            data-card-toggle="${idx}"
+            class="relative w-full text-left bg-white rounded-2xl transition-all duration-300 ease-out cursor-pointer group select-none
+              ${isOpen
+                ? 'shadow-lg ring-2 ring-[#009DE0] translate-y-0'
+                : 'shadow-[0_4px_20px_-4px_rgba(0,157,224,0.15)] hover:shadow-[0_8px_30px_-4px_rgba(0,157,224,0.2)] hover:-translate-y-1'
+              }"
+            aria-expanded="${isOpen}"
+          >
+            <!-- Gradient top bar -->
+            <div class="h-1.5 w-full bg-gradient-to-r from-[#009DE0] to-[#2DD4BF] rounded-t-2xl"></div>
+
+            <!-- Display Period -->
+            ${periodText ? `
+            <div class="absolute top-5 right-6 pointer-events-none z-10">
+              <span class="text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-100 px-2 py-1 rounded-md shadow-sm">
+                ${periodText}
+              </span>
+            </div>
+            ` : ''}
+
+            <!-- Summary View -->
+            <div class="p-6 relative pb-6">
+              <!-- Tags -->
+              <div class="flex flex-wrap items-center gap-2 mb-4 min-h-[1.5rem] pr-24">
+                ${card.target?.label ? `
+                <span class="text-xs font-bold text-[#334455] flex items-center gap-1 bg-white border border-[#E2E8F0] px-2.5 py-1 rounded-md shadow-sm">
+                  <span class="w-1.5 h-1.5 rounded-full bg-[#D6DE26]"></span>
+                  ${escapeHtml(card.target.label)}
+                </span>
+                ` : ''}
+                ${gradeTagsHtml}
+                ${tagsHtml}
+              </div>
+
+              <!-- Title -->
+              <div class="mb-5 min-h-[2rem]">
+                <div class="flex items-start gap-3">
+                  ${card.badgeSvg ? `<div class="shrink-0 mt-0.5 w-10 h-10">${card.badgeSvg}</div>` : ''}
+                  <h3 class="text-xl md:text-2xl font-bold text-[#334455] leading-snug break-words">
+                    ${escapeHtml(card.title?.text)}
+                  </h3>
+                </div>
+              </div>
+
+              <!-- Voices -->
+              <div class="relative bg-[#F8FAFC] rounded-xl p-4 border border-[#E2E8F0] mb-5 min-h-[6rem]">
+                <div class="flex gap-3 mb-2 items-start">
+                  <span class="shrink-0 text-[10px] font-bold text-white bg-[#64748B] px-2 py-0.5 rounded-full mt-0.5">保護者</span>
+                  <p class="text-sm text-[#334455] leading-relaxed w-full break-words">${escapeHtml(card.voice?.parent?.text)}</p>
+                </div>
+                <div class="flex gap-3 items-start">
+                  <span class="shrink-0 text-[10px] font-bold text-white bg-[#009DE0] px-2 py-0.5 rounded-full mt-0.5">お子様</span>
+                  <p class="text-sm font-bold text-[#009DE0] leading-relaxed w-full break-words">${escapeHtml(card.voice?.child?.text)}</p>
+                </div>
+              </div>
+
+              <!-- Solution Summary -->
+              <div class="bg-[#F0F9FF] border-2 border-[#009DE0]/20 rounded-xl p-4 mb-6 relative overflow-hidden min-h-[5rem]">
+                <div class="flex items-start gap-3 relative z-10">
+                  <div class="bg-[#009DE0] text-white p-1.5 rounded-full shrink-0 mt-0.5">
+                    <i data-lucide="lightbulb" class="w-[18px] h-[18px]"></i>
+                  </div>
+                  <div class="w-full">
+                    <h4 class="font-bold text-[#009DE0] text-sm mb-1 break-words">${escapeHtml(card.solution_summary?.head?.text)}</h4>
+                    <p class="text-sm text-[#334455] leading-relaxed break-words">${escapeHtml(card.solution_summary?.body?.text)}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Toggle Button -->
+              <div class="flex justify-center">
+                <div class="flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all duration-300 w-full md:w-auto justify-center
+                  ${isOpen
+                    ? 'bg-slate-100 text-slate-500'
+                    : 'bg-[#009DE0] text-white shadow-md group-hover:bg-[#008AC5] group-hover:shadow-lg group-hover:scale-105'
+                  }">
+                  <span>${isOpen ? '閉じる' : '詳細を見る'}</span>
+                  <i data-lucide="chevron-down" class="w-[18px] h-[18px] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expandable Detail -->
+            ${isOpen ? `
+            <div class="bg-white rounded-b-2xl border-t border-[#E2E8F0]" onclick="event.stopPropagation()">
+              <div class="p-6 pt-2">${detailHtml}</div>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // Initial render
+    renderCards();
+  </script>
+</body>
+</html>

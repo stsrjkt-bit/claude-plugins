@@ -1,0 +1,8 @@
+{
+  "name": "ui-design-to-react",
+  "description": "Stitch MCP + HTMLモック + Figmaキャプチャを組み合わせたUI制作ワークフロー",
+  "version": "1.0.0",
+  "author": {
+    "name": "sato-math-academy"
+  }
+}
