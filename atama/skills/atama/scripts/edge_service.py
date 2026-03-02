@@ -1,6 +1,7 @@
 """Custom Edge TTS service for manim-voiceover."""
 
 import asyncio
+import os
 from pathlib import Path
 
 from manim_voiceover.helper import remove_bookmarks
@@ -35,7 +36,7 @@ class EdgeTTSService(SpeechService):
         if path is None:
             audio_path = self.get_audio_basename(input_data) + ".mp3"
         else:
-            audio_path = path
+            audio_path = os.path.basename(path)
 
         output_file = str(Path(cache_dir) / audio_path)
 

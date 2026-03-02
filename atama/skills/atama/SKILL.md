@@ -451,8 +451,8 @@ Phase 11.5 で動画が生成されている場合、既存プリントに動画
 
 ```bash
 source ~/.env.studygram
-VIDEO_PATH="/tmp/hoshu_material/media/videos/{単元名}_video/720p30/HoshuVideo.mp4"
-if [ -f "$VIDEO_PATH" ]; then
+VIDEO_PATH=$(find /tmp/hoshu_material/media/videos/ -type f -name "HoshuVideo.mp4" 2>/dev/null | head -n 1)
+if [ -n "$VIDEO_PATH" ] && [ -f "$VIDEO_PATH" ]; then
   VIDEO_RESULT=$(curl -s -w "\n%{http_code}" "${SUPABASE_URL}/functions/v1/hoshu-video-upload" \
     -H "Authorization: Bearer ${ADMIN_ACCESS_TOKEN}" \
     -F "printId=${PRINT_ID}" \
