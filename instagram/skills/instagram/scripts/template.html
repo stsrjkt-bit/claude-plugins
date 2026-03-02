@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  @font-face {
+    font-family: 'YuGothic';
+    src: url('file:///mnt/c/Windows/Fonts/YuGothR.ttc');
+    font-weight: normal;
+  }
+  @font-face {
+    font-family: 'YuGothic';
+    src: url('file:///mnt/c/Windows/Fonts/YuGothB.ttc');
+    font-weight: bold;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1080px; height: 1080px; }
+
+  /*
+    Original React renders at ~384px. Scale = 1080/384 = 2.8125
+    All values below = original * 2.8125
+  */
+  .container {
+    width: 1080px;
+    height: 1080px;
+    background: #fcf9f2;
+    border-radius: 34px;
+    padding: 68px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    font-family: 'YuGothic', 'Yu Gothic', system-ui, sans-serif;
+  }
+
+  .deco-top-right {
+    position: absolute;
+    top: 0; right: 0;
+    width: 338px; height: 338px;
+    border-bottom-left-radius: 100%;
+    opacity: 0.6;
+  }
+  .deco-bottom-left {
+    position: absolute;
+    bottom: 68px; left: 68px;
+    width: 135px; height: 135px;
+    border-radius: 50%;
+    opacity: 0.8;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 90px;
+    position: relative;
+    z-index: 10;
+  }
+  .month-label {
+    font-size: 28px;
+    letter-spacing: 6px;
+    background-color: #5a544b;
+    color: white;
+    padding: 11px 34px;
+    border-radius: 999px;
+    text-transform: uppercase;
+  }
+  .brand {
+    font-size: 28px;
+    font-weight: bold;
+    opacity: 0.4;
+    letter-spacing: 3px;
+    color: #5a544b;
+  }
+
+  .content {
+    position: relative;
+    z-index: 10;
+  }
+
+  .eyecatch {
+    position: absolute;
+    right: 56px;
+    top: 220px;
+    width: 300px;
+    height: 300px;
+    opacity: 0.7;
+    z-index: 5;
+  }
+
+  .date-icon {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-bottom: 34px;
+    font-size: 37px;
+    font-weight: bold;
+    opacity: 0.6;
+    color: #5a544b;
+  }
+
+  .headline-area h1 {
+    font-size: 62px;
+    font-weight: bold;
+    line-height: 1.5;
+    color: #4a453e;
+    margin-bottom: 45px;
+  }
+  .subhead-highlight {
+    padding: 6px 17px;
+    display: inline;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  .body-box {
+    background-color: rgba(255,255,255,0.8);
+    padding: 45px;
+    border-radius: 34px;
+    border: 3px solid #efeadd;
+    position: relative;
+    overflow: hidden;
+  }
+  .body-accent-bar {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 11px;
+  }
+  .body-text {
+    font-size: 37px;
+    line-height: 2;
+    color: #6c665e;
+    white-space: pre-wrap;
+    padding-left: 22px;
+  }
+
+  .footer {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 34px;
+    color: #8c867a;
+    padding-top: 34px;
+    position: relative;
+    z-index: 10;
+  }
+  .footer-name { font-size: 31px; letter-spacing: 3px; }
+  .footer-line { width: 90px; height: 3px; background-color: #8c867a; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="deco-top-right" id="deco-top"></div>
+    <div class="deco-bottom-left" id="deco-bottom"></div>
+    <div class="header">
+      <span class="month-label" id="month-label"></span>
+      <span class="brand">SATOU MATH ACADEMY</span>
+    </div>
+    <div class="eyecatch" id="eyecatch"></div>
+    <div class="content">
+      <div class="date-icon">
+        <span id="icon"></span>
+        <span id="date"></span>
+      </div>
+      <div class="headline-area">
+        <h1>
+          <span id="headline"></span>
+          <br>
+          <span class="subhead-highlight" id="subhead"></span>
+        </h1>
+      </div>
+      <div class="body-box">
+        <div class="body-accent-bar" id="accent-bar"></div>
+        <p class="body-text" id="body"></p>
+      </div>
+    </div>
+    <div class="footer">
+      <span class="footer-name">さとう数理塾</span>
+      <div class="footer-line"></div>
+    </div>
+  </div>
+</body>
+</html>

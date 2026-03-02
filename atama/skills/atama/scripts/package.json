@@ -1,0 +1,8 @@
+{
+  "name": "atama-scripts",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "puppeteer": "^24.37.4"
+  }
+}

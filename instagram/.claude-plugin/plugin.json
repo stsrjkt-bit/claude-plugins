@@ -1,0 +1,8 @@
+{
+  "name": "instagram",
+  "description": "Instagram投稿ワークフロー（リサーチ→テキスト生成→アイキャッチSVG→画像生成）",
+  "version": "1.0.0",
+  "author": {
+    "name": "sato-math-academy"
+  }
+}

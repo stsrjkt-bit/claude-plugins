@@ -1,0 +1,158 @@
+@font-face {
+  font-family: 'YuMincho';
+  src: url('/mnt/c/Windows/Fonts/yumin.ttf') format('truetype');
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'YuMincho', 'Yu Mincho', serif;
+  font-size: 11pt;
+  line-height: 1.8;
+  color: #333;
+  padding: 20mm 18mm;
+}
+
+h1 {
+  font-size: 16pt;
+  text-align: center;
+  margin-bottom: 8px;
+  border-bottom: 2px solid #333;
+  padding-bottom: 6px;
+}
+
+h1 .answer-badge {
+  display: inline-block;
+  background: #c0392b;
+  color: #fff;
+  font-size: 12pt;
+  padding: 2px 12px;
+  border-radius: 4px;
+  margin-left: 12px;
+  vertical-align: middle;
+}
+
+h2 {
+  font-size: 13pt;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  border-left: 4px solid #2c3e50;
+  padding-left: 8px;
+}
+
+h3 {
+  font-size: 12pt;
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+
+p {
+  margin-bottom: 8px;
+}
+
+/* 問題枠 */
+.box {
+  border: 1px solid #bdc3c7;
+  background: #fafafa;
+  padding: 12px 16px;
+  margin: 10px 0;
+  border-radius: 4px;
+  page-break-inside: avoid;
+}
+
+/* POINTボックス */
+blockquote {
+  border: 2px solid #e74c3c;
+  background: #fef5f5;
+  padding: 12px 16px;
+  margin: 12px 0;
+  border-radius: 4px;
+  page-break-inside: avoid;
+}
+
+blockquote::before {
+  content: "POINT";
+  display: block;
+  font-weight: bold;
+  color: #e74c3c;
+  margin-bottom: 4px;
+}
+
+/* 解答ボックス */
+.answer-box {
+  border: 2px solid #c0392b;
+  background: #fef9f9;
+  padding: 12px 16px;
+  margin: 10px 0;
+  border-radius: 4px;
+  page-break-inside: avoid;
+}
+
+.answer-box::before {
+  content: "【解答】";
+  display: block;
+  font-weight: bold;
+  color: #c0392b;
+  margin-bottom: 4px;
+}
+
+/* 解答欄（空欄） */
+.answer-space {
+  border: 1px solid #999;
+  min-height: 60px;
+  margin: 8px 0;
+  padding: 8px;
+}
+
+/* 改ページ */
+.page-break {
+  page-break-before: always;
+}
+
+/* テーブル */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0;
+  page-break-inside: avoid;
+}
+
+th, td {
+  border: 1px solid #bdc3c7;
+  padding: 6px 10px;
+  text-align: center;
+}
+
+th {
+  background: #ecf0f1;
+  font-weight: bold;
+}
+
+/* MathJax調整 */
+mjx-container {
+  font-size: 110% !important;
+}
+
+/* 印刷用 */
+@media print {
+  body {
+    padding: 0;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  .box, blockquote, .answer-box, table {
+    page-break-inside: avoid;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 20mm 18mm;
+}
