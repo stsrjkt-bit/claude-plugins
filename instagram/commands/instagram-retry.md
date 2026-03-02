@@ -18,7 +18,7 @@ $ARGUMENTS
 
 1. `~/.claude/projects/-home-stsrj/memory/instagram-latest.json` を Read して直前の生成結果を読み込む
    - ファイルが存在しない場合はエラー: 「先に /instagram で投稿を生成してください」
-2. `~/.claude/skills/instagram-retry/patterns.md` を Read してパターン定義を確認する
+2. `~/.claude/skills/instagram/patterns.md` を Read してパターン定義を確認する
 3. `~/.claude/skills/instagram/reference.md` を Read して塾プロフィール・トーン指定を確認する
 4. 引数に応じて処理を分岐する：
 

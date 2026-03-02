@@ -1,3 +1,13 @@
+---
+name: instagram
+description: Instagram投稿ワークフロー（リサーチ→テキスト生成→アイキャッチ→画像生成）
+user_invocable: true
+arguments:
+  - name: input
+    description: "今日やったこと、またはサブコマンド（research, retry, image, photo）"
+    required: true
+---
+
 # /instagram - Instagram投稿ワークフロー
 
 ## 説明
