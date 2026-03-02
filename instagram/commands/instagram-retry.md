@@ -11,7 +11,7 @@ $ARGUMENTS
 ## 参照ファイル
 
 以下の2ファイルを Read ツールで読み込むこと：
-- `~/.claude/skills/instagram-retry/patterns.md` - パターン定義
+- `~/.claude/skills/instagram/patterns.md` - パターン定義
 - `~/.claude/skills/instagram/reference.md` - 塾プロフィール・制約
 
 ## 手順

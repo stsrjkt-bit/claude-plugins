@@ -82,6 +82,21 @@ echo ""
 echo "現在のコマンド一覧:"
 ls -la "$COMMANDS_DIR/" 2>/dev/null || echo "  (なし)"
 
+# --- npm install (scripts/) ---
+echo ""
+echo "=== npm install ==="
+for pkg_json in "$REPO_DIR"/*/skills/*/scripts/package.json; do
+  [ -f "$pkg_json" ] || continue
+  scripts_dir="$(dirname "$pkg_json")"
+  skill_name="$(basename "$(dirname "$scripts_dir")")"
+  if [ -d "$scripts_dir/node_modules" ]; then
+    echo "  OK  $skill_name/scripts"
+  else
+    echo "  INSTALL $skill_name/scripts"
+    (cd "$scripts_dir" && npm install --silent 2>/dev/null)
+  fi
+done
+
 # --- 出力ディレクトリ作成 ---
 echo ""
 echo "=== 出力ディレクトリ ==="
