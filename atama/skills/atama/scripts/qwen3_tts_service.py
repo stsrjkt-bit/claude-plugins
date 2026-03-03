@@ -1,4 +1,4 @@
-"""Qwen3-TTS fine-tuned voice service for manim-voiceover (Kaggle GPU backend).
+"""Qwen3-TTS fine-tuned voice service for manim-voiceover (Modal GPU backend).
 
 Uses fine-tuned model (YUKI66/qwen3-tts-1.7b-finetuned) with voice cloning
 for best quality. Reference audio provides x-vector speaker identity on top
@@ -12,29 +12,20 @@ Usage in Manim script:
             super().setup()
             self.set_speech_service(Qwen3TTSService())
 
-Before rendering, generate audio via Kaggle:
-    Qwen3TTSService.kaggle_generate(["text1", "text2", ...])
+Before rendering, generate audio via Modal:
+    Qwen3TTSService.modal_generate(["text1", "text2", ...])
 """
 
 import hashlib
-import json
 import os
 import shutil
-import subprocess
-import tempfile
-import time
 from pathlib import Path
 
 from manim_voiceover.helper import remove_bookmarks
 from manim_voiceover.services.base import SpeechService
 
 SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
-VOICE_REF_PATH = os.path.join(SCRIPTS_DIR, "voice_ref.wav")
-KAGGLE_KERNEL_ID = "satosuri/qwen3-tts-voice-gen"
-KAGGLE_DATASET = "satosuri/voice-ref-clip"
 AUDIO_CACHE_DIR = os.path.join(SCRIPTS_DIR, "voice_cache")
-
-HF_MODEL_ID = "YUKI66/qwen3-tts-1.7b-finetuned"
 
 
 def _text_hash(text: str) -> str:
@@ -76,7 +67,7 @@ class Qwen3TTSService(SpeechService):
             raise RuntimeError(
                 f"Audio not found for: {input_text[:50]}...\n"
                 f"Expected: {pregenerated}\n"
-                "Run Qwen3TTSService.kaggle_generate(texts) first."
+                "Run Qwen3TTSService.modal_generate(texts) first."
             )
 
         shutil.copy(pregenerated, output_file)
@@ -89,15 +80,16 @@ class Qwen3TTSService(SpeechService):
         return json_dict
 
     @staticmethod
-    def kaggle_generate(
+    def modal_generate(
         texts: list[str],
         output_dir: str = AUDIO_CACHE_DIR,
-        timeout_minutes: int = 20,
     ) -> list[str]:
-        """Generate audio for all texts via Kaggle GPU.
+        """Generate audio for all texts via Modal GPU.
 
         Returns list of output file paths.
         """
+        import modal  # lazy import（manim render 時は不要）
+
         os.makedirs(output_dir, exist_ok=True)
 
         # Check which texts already have cached audio
@@ -108,141 +100,37 @@ class Qwen3TTSService(SpeechService):
                 pending.append(text)
 
         if not pending:
-            print("All audio already cached, skipping Kaggle.")
+            print("All audio already cached, skipping Modal.")
             return [
                 os.path.join(output_dir, f"{_text_hash(t)}.wav") for t in texts
             ]
 
-        print(f"Generating {len(pending)} audio clips via Kaggle...")
+        print(f"Generating {len(pending)} audio clips via Modal GPU...")
 
-        # Build text list with hashes for the kernel
-        text_entries = []
-        for text in pending:
+        TTSModel = modal.Cls.from_name("qwen3-tts", "TTSModel")
+        model = TTSModel()
+
+        results = list(model.generate.map(
+            pending, return_exceptions=True, wrap_returned_exceptions=False,
+        ))
+
+        failed = []
+        for i, (text, result) in enumerate(zip(pending, results)):
             h = _text_hash(text)
-            text_entries.append({"hash": h, "text": text})
+            if isinstance(result, Exception):
+                print(f"  [{i+1}/{len(pending)}] {h} FAILED: {result}")
+                failed.append(text)
+                continue
+            dst = os.path.join(output_dir, f"{h}.wav")
+            with open(dst, "wb") as f:
+                f.write(result["wav"])
+            print(f"  [{i+1}/{len(pending)}] {h} done ({len(result['wav'])} bytes)")
 
-        # Write Kaggle kernel script
-        kernel_dir = tempfile.mkdtemp(prefix="kaggle_tts_")
-        _write_kernel_script(kernel_dir, text_entries)
-        _write_kernel_metadata(kernel_dir)
-
-        # Push to Kaggle
-        env = {**os.environ, "KAGGLE_API_TOKEN": os.environ["KAGGLE_API_TOKEN"]}
-        subprocess.run(
-            ["kaggle", "kernels", "push", "-p", kernel_dir],
-            check=True, env=env,
-        )
-        print("Kernel pushed. Polling for completion...")
-
-        # Poll until complete
-        start = time.time()
-        while time.time() - start < timeout_minutes * 60:
-            time.sleep(30)
-            result = subprocess.run(
-                ["kaggle", "kernels", "status", KAGGLE_KERNEL_ID],
-                capture_output=True, text=True, env=env,
-            )
-            status = result.stdout.strip()
-            print(f"  {status}")
-            if "COMPLETE" in status.upper():
-                break
-            if "ERROR" in status.upper() or "CANCEL" in status.upper():
-                raise RuntimeError(f"Kaggle kernel failed: {status}")
-        else:
-            raise RuntimeError(f"Kaggle kernel timed out after {timeout_minutes}m")
-
-        # Download output
-        dl_dir = os.path.join(kernel_dir, "output")
-        os.makedirs(dl_dir, exist_ok=True)
-        subprocess.run(
-            ["kaggle", "kernels", "output", KAGGLE_KERNEL_ID,
-             "-p", dl_dir, "--force"],
-            check=True, env=env,
-        )
-
-        # Move audio files to cache
-        moved = 0
-        for entry in text_entries:
-            src = os.path.join(dl_dir, f"{entry['hash']}.wav")
-            dst = os.path.join(output_dir, f"{entry['hash']}.wav")
-            if os.path.exists(src):
-                shutil.move(src, dst)
-                moved += 1
-
-        print(f"Done! {moved}/{len(pending)} audio files cached to {output_dir}")
-
-        # Clean up temp dir
-        shutil.rmtree(kernel_dir, ignore_errors=True)
+        if failed:
+            raise RuntimeError(f"{len(failed)}/{len(pending)} clips failed to generate")
 
         return [
             os.path.join(output_dir, f"{_text_hash(t)}.wav") for t in texts
         ]
 
-
-def _write_kernel_script(kernel_dir: str, text_entries: list[dict]):
-    texts_json = json.dumps(text_entries, ensure_ascii=False, indent=2)
-    script = f'''"""Qwen3-TTS Fine-tuned Voice - Batch Generation on Kaggle GPU"""
-import subprocess, os, sys, time, json, glob
-
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "qwen_tts", "soundfile"], check=True)
-
-import torch
-import soundfile as sf
-from qwen_tts import Qwen3TTSModel
-
-print(f"GPU: {{torch.cuda.get_device_name(0)}}, VRAM: {{torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f}} GB")
-
-print("Loading fine-tuned Qwen3-TTS 1.7B model...")
-t0 = time.time()
-model = Qwen3TTSModel.from_pretrained(
-    "{HF_MODEL_ID}",
-    device_map="cuda:0",
-    dtype=torch.bfloat16,
-    attn_implementation="sdpa",
-)
-print(f"Model loaded in {{time.time()-t0:.0f}}s")
-
-ref_candidates = glob.glob("/kaggle/input/**/*.wav", recursive=True)
-assert ref_candidates, "No reference audio found!"
-ref_path = ref_candidates[0]
-print(f"Reference audio: {{ref_path}}")
-
-text_entries = {texts_json}
-
-for i, entry in enumerate(text_entries):
-    t0 = time.time()
-    wavs, sr = model.generate_voice_clone(
-        text=entry["text"],
-        language="Japanese",
-        ref_audio=ref_path,
-        x_vector_only_mode=True,
-        max_new_tokens=2048,
-    )
-    out_path = f"/kaggle/working/{{entry['hash']}}.wav"
-    sf.write(out_path, wavs[0], sr)
-    elapsed = time.time() - t0
-    duration = len(wavs[0]) / sr
-    print(f"[{{i}}] {{entry['hash']}} generated in {{elapsed:.1f}}s, duration={{duration:.1f}}s")
-
-print(f"\\nDone! Generated {{len(text_entries)}} files.")
-'''
-    with open(os.path.join(kernel_dir, "qwen3-tts-voice-gen.py"), "w") as f:
-        f.write(script)
-
-
-def _write_kernel_metadata(kernel_dir: str):
-    metadata = {
-        "id": KAGGLE_KERNEL_ID,
-        "title": "qwen3-tts-voice-gen",
-        "code_file": "qwen3-tts-voice-gen.py",
-        "language": "python",
-        "kernel_type": "script",
-        "is_private": True,
-        "enable_gpu": True,
-        "enable_internet": True,
-        "dataset_sources": [KAGGLE_DATASET],
-        "competition_sources": [],
-        "kernel_sources": [],
-    }
-    with open(os.path.join(kernel_dir, "kernel-metadata.json"), "w") as f:
-        json.dump(metadata, f, indent=2)
+    kaggle_generate = modal_generate  # 後方互換エイリアス
