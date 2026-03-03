@@ -25,10 +25,7 @@ from manim_voiceover.helper import remove_bookmarks
 from manim_voiceover.services.base import SpeechService
 
 SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
-VOICE_REF_PATH = os.path.join(SCRIPTS_DIR, "voice_ref.wav")
 AUDIO_CACHE_DIR = os.path.join(SCRIPTS_DIR, "voice_cache")
-
-HF_MODEL_ID = "YUKI66/qwen3-tts-1.7b-finetuned"
 
 
 def _text_hash(text: str) -> str:
@@ -113,13 +110,26 @@ class Qwen3TTSService(SpeechService):
         TTSModel = modal.Cls.from_name("qwen3-tts", "TTSModel")
         model = TTSModel()
 
+        failed = []
         for i, text in enumerate(pending):
             h = _text_hash(text)
-            result = model.generate.remote(text)
-            dst = os.path.join(output_dir, f"{h}.wav")
-            with open(dst, "wb") as f:
-                f.write(result["wav"])
-            print(f"  [{i+1}/{len(pending)}] {h} done ({len(result['wav'])} bytes)")
+            for attempt in range(3):
+                try:
+                    result = model.generate.remote(text)
+                    dst = os.path.join(output_dir, f"{h}.wav")
+                    with open(dst, "wb") as f:
+                        f.write(result["wav"])
+                    print(f"  [{i+1}/{len(pending)}] {h} done ({len(result['wav'])} bytes)")
+                    break
+                except Exception as e:
+                    if attempt < 2:
+                        print(f"  [{i+1}/{len(pending)}] {h} retry {attempt+1}/2: {e}")
+                    else:
+                        print(f"  [{i+1}/{len(pending)}] {h} FAILED: {e}")
+                        failed.append(text)
+
+        if failed:
+            raise RuntimeError(f"{len(failed)}/{len(pending)} clips failed to generate")
 
         return [
             os.path.join(output_dir, f"{_text_hash(t)}.wav") for t in texts
