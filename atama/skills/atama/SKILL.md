@@ -428,7 +428,9 @@ script = Path("/tmp/hoshu_material/{単元名}_video.py").read_text()
 
 # voice_cache から今回のスクリプトで使う WAV だけ送信（不要ファイルを除外）
 import hashlib, re
-texts = re.findall(r'voiceover\(\s*text=["\'](.+?)["\']', script)
+# 単一引用符・二重引用符・三重引用符すべてに対応
+texts = re.findall(r'voiceover\(\s*text=(?:"""(.*?)"""|\'\'\'(.*?)\'\'\'|"([^"]*)"|\'([^\']*)\')', script, re.DOTALL)
+texts = [next(g for g in groups if g is not None) for groups in texts]
 hashes = {hashlib.md5(t.encode()).hexdigest()[:16] for t in texts}
 voice_files = {}
 cache_dir = Path("/home/yuki/.claude/skills/atama/scripts/voice_cache/")
@@ -504,14 +506,27 @@ echo "${STUDENT_JSON}"
 #### Step 3: PDF アップロード
 ```bash
 source ~/.env.studygram
-UPLOAD_RESULT=$(curl -s "${SUPABASE_URL}/functions/v1/hoshu-upload" \
+UPLOAD_RESULT=$(curl -s -w "\n%{http_code}" "${SUPABASE_URL}/functions/v1/hoshu-upload" \
   -H "Authorization: Bearer ${ADMIN_ACCESS_TOKEN}" \
   -F "title=【補習】${単元名}" \
   -F "subject=${教科名}" \
   -F "problemPdf=@/mnt/c/Users/stsrj/Desktop/補習プリント/${単元名}_補習プリント.pdf" \
   -F "answerPdf=@/mnt/c/Users/stsrj/Desktop/補習プリント/${単元名}_補習プリント_解答.pdf")
-echo "${UPLOAD_RESULT}"
-PRINT_ID=$(echo "${UPLOAD_RESULT}" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+HTTP_CODE=$(echo "$UPLOAD_RESULT" | tail -1)
+BODY=$(echo "$UPLOAD_RESULT" | sed '$d')
+echo "Upload HTTP: ${HTTP_CODE}"
+echo "${BODY}"
+if [ "$HTTP_CODE" != "200" ]; then
+  echo "ERROR: PDF upload failed (HTTP ${HTTP_CODE}). Aborting upload."
+  # エラー時は PDF を残してユーザーに報告（Step 5 の削除をスキップ）
+  exit 1
+fi
+PRINT_ID=$(echo "${BODY}" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['id'])" 2>&1)
+if [ -z "$PRINT_ID" ] || [[ "$PRINT_ID" == Traceback* ]]; then
+  echo "ERROR: Failed to extract PRINT_ID from response: ${BODY}"
+  exit 1
+fi
+echo "PRINT_ID=${PRINT_ID}"
 ```
 
 #### Step 3.5: 動画アップロード
@@ -538,12 +553,18 @@ fi
 #### Step 4: 生徒に割り当て
 ```bash
 source ~/.env.studygram
-curl -s "${SUPABASE_URL}/rest/v1/hoshu_print_assignments" \
+ASSIGN_RESULT=$(curl -s -w "\n%{http_code}" "${SUPABASE_URL}/rest/v1/hoshu_print_assignments" \
   -H "apikey: ${SUPABASE_ANON_KEY}" \
   -H "Authorization: Bearer ${ADMIN_ACCESS_TOKEN}" \
   -H "Content-Type: application/json" \
   -H "Prefer: return=minimal" \
-  -d "{\"print_id\":\"${PRINT_ID}\",\"student_id\":\"${STUDENT_ID}\",\"assigned_by\":\"${ADMIN_USER_ID}\"}"
+  -d "{\"print_id\":\"${PRINT_ID}\",\"student_id\":\"${STUDENT_ID}\",\"assigned_by\":\"${ADMIN_USER_ID}\"}")
+ASSIGN_HTTP=$(echo "$ASSIGN_RESULT" | tail -1)
+echo "Assignment HTTP: ${ASSIGN_HTTP}"
+if [ "$ASSIGN_HTTP" != "201" ] && [ "$ASSIGN_HTTP" != "200" ]; then
+  ASSIGN_BODY=$(echo "$ASSIGN_RESULT" | sed '$d')
+  echo "ERROR: Student assignment failed (HTTP ${ASSIGN_HTTP}): ${ASSIGN_BODY}"
+fi
 ```
 
 #### Step 5: デスクトップのPDFを削除
