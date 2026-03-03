@@ -30,7 +30,7 @@ from manim_voiceover.services.base import SpeechService
 
 SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
 VOICE_REF_PATH = os.path.join(SCRIPTS_DIR, "voice_ref.wav")
-KAGGLE_KERNEL_ID = "satosuri/xtts-voice-clone"
+KAGGLE_KERNEL_ID = "satosuri/qwen3-tts-voice-gen"
 KAGGLE_DATASET = "satosuri/voice-ref-clip"
 AUDIO_CACHE_DIR = os.path.join(SCRIPTS_DIR, "voice_cache")
 
@@ -181,21 +181,16 @@ class Qwen3TTSService(SpeechService):
 
 def _write_kernel_script(kernel_dir: str, text_entries: list[dict]):
     texts_json = json.dumps(text_entries, ensure_ascii=False, indent=2)
-    hf_token = os.environ.get("HF_TOKEN", "")
     script = f'''"""Qwen3-TTS Fine-tuned Voice - Batch Generation on Kaggle GPU"""
 import subprocess, os, sys, time, json, glob
 
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "qwen_tts", "soundfile", "huggingface_hub"], check=True)
+subprocess.run([sys.executable, "-m", "pip", "install", "-q", "qwen_tts", "soundfile"], check=True)
 
 import torch
 import soundfile as sf
 from qwen_tts import Qwen3TTSModel
-from huggingface_hub import login
 
 print(f"GPU: {{torch.cuda.get_device_name(0)}}, VRAM: {{torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f}} GB")
-
-# Login to HF for private model access
-login(token="{hf_token}")
 
 print("Loading fine-tuned Qwen3-TTS 1.7B model...")
 t0 = time.time()
@@ -203,6 +198,7 @@ model = Qwen3TTSModel.from_pretrained(
     "{HF_MODEL_ID}",
     device_map="cuda:0",
     dtype=torch.bfloat16,
+    attn_implementation="sdpa",
 )
 print(f"Model loaded in {{time.time()-t0:.0f}}s")
 
@@ -230,15 +226,15 @@ for i, entry in enumerate(text_entries):
 
 print(f"\\nDone! Generated {{len(text_entries)}} files.")
 '''
-    with open(os.path.join(kernel_dir, "xtts-voice-clone.py"), "w") as f:
+    with open(os.path.join(kernel_dir, "qwen3-tts-voice-gen.py"), "w") as f:
         f.write(script)
 
 
 def _write_kernel_metadata(kernel_dir: str):
     metadata = {
         "id": KAGGLE_KERNEL_ID,
-        "title": "xtts-voice-clone",
-        "code_file": "xtts-voice-clone.py",
+        "title": "qwen3-tts-voice-gen",
+        "code_file": "qwen3-tts-voice-gen.py",
         "language": "python",
         "kernel_type": "script",
         "is_private": True,
