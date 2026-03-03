@@ -64,7 +64,18 @@ manim_image = (
         "libcairo2-dev", "libpango1.0-dev",
     )
     .pip_install("manim", "manim-voiceover")
-    .run_commands("pip install 'setuptools<75' && python -c 'import pkg_resources'")
+    .run_commands(
+        "pip install 'setuptools<75' && python -c 'import pkg_resources'",
+        # manim-voiceover の get_duration() が MP3 をハードコードしており WAV で壊れるのをパッチ
+        "python -c \""
+        "import site; p = site.getsitepackages()[0] + '/manim_voiceover/modify_audio.py';"
+        "t = open(p).read();"
+        "t = t.replace('from mutagen.mp3 import MP3', 'import sox');"
+        "t = t.replace('audio = MP3(path)\\n    return audio.info.length', 'return sox.file_info.duration(path)');"
+        "open(p,'w').write(t);"
+        "print('Patched modify_audio.py: get_duration now uses sox')"
+        "\"",
+    )
 )
 
 # 簡易 qwen3_tts_service.py — キャッシュ参照のみ（Modal/HF 呼び出しなし）
