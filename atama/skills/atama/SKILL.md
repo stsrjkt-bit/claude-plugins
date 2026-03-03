@@ -430,7 +430,7 @@ script = Path("/tmp/hoshu_material/{単元名}_video.py").read_text()
 import hashlib, re
 # 単一引用符・二重引用符・三重引用符すべてに対応
 texts = re.findall(r'voiceover\(\s*text=(?:"""(.*?)"""|\'\'\'(.*?)\'\'\'|"([^"]*)"|\'([^\']*)\')', script, re.DOTALL)
-texts = [next(g for g in groups if g is not None) for groups in texts]
+texts = [next(g for g in groups if g) for groups in texts]
 hashes = {hashlib.md5(t.encode()).hexdigest()[:16] for t in texts}
 voice_files = {}
 cache_dir = Path("/home/yuki/.claude/skills/atama/scripts/voice_cache/")
@@ -564,6 +564,8 @@ echo "Assignment HTTP: ${ASSIGN_HTTP}"
 if [ "$ASSIGN_HTTP" != "201" ] && [ "$ASSIGN_HTTP" != "200" ]; then
   ASSIGN_BODY=$(echo "$ASSIGN_RESULT" | sed '$d')
   echo "ERROR: Student assignment failed (HTTP ${ASSIGN_HTTP}): ${ASSIGN_BODY}"
+  # 割り当て失敗時は PDF を残す（Step 5 の削除をスキップ）
+  exit 1
 fi
 ```
 
