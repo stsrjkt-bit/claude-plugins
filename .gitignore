@@ -2,3 +2,5 @@ node_modules/
 package-lock.json
 .entire/
 .claude/
+__pycache__/
+voice_cache/

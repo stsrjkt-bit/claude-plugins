@@ -320,11 +320,12 @@ cd ~/.claude/skills/atama/scripts && node generate-pdf.mjs /tmp/hoshu_material/{
 Phase 7-8 の分析結果に基づき、つまずきポイントを解説する Manim アニメーション動画を生成する。
 
 ### 前提条件
-以下がインストール済みであること（未インストールなら `pip3 install --break-system-packages manim manim-voiceover edge-tts` と `sudo apt install -y ffmpeg sox texlive-latex-base texlive-latex-extra`）:
+以下がインストール済みであること（未インストールなら `pip3 install --break-system-packages manim manim-voiceover` と `sudo apt install -y ffmpeg sox texlive-latex-base texlive-latex-extra`）:
 - manim >= 0.20
 - manim-voiceover >= 0.3
-- edge-tts >= 7.0
 - ffmpeg, sox, texlive (pdflatex)
+
+音声は fine-tuned Qwen3-TTS 1.7B（`YUKI66/qwen3-tts-1.7b-finetuned`、先生の声で学習済み）を Kaggle GPU で生成する。環境変数 `KAGGLE_API_TOKEN` が必要。
 
 ### Step 1: Manim スクリプト生成
 
@@ -338,14 +339,12 @@ sys.path.insert(0, '/home/yuki/.claude/skills/atama/scripts')
 
 from manim import *
 from manim_voiceover import VoiceoverScene
-from edge_service import EdgeTTSService
+from qwen3_tts_service import Qwen3TTSService
 
 class HoshuVideo(VoiceoverScene):
     def setup(self):
         super().setup()
-        self.set_speech_service(
-            EdgeTTSService(voice="ja-JP-NanamiNeural", rate="+5%")
-        )
+        self.set_speech_service(Qwen3TTSService())
 
     def construct(self):
         self.scene_intro()
@@ -368,11 +367,52 @@ class HoshuVideo(VoiceoverScene):
 - `MathTex()` の `\text{}` 内に日本語を入れるとエラーになる。日本語と数式が混在する場合は `Text` と `MathTex` を別 Mobject にして `VGroup().arrange(RIGHT)` で横に並べる
 - voiceover の text は自然な日本語話し言葉で書く（「サイン t は」「コサイン2乗は」等）
 
+**voiceover テキストの TTS 最適化ルール（必ず従うこと）:**
+Qwen3-TTS はボイスクローンモデルであり、漢字の読み間違いが発生しやすい。以下のルールで原稿を書くこと:
+
+1. **読み間違いやすい漢字はひらがなに開く**
+   - 数学用語: 斜辺→しゃへん、直角三角形→ちょっかくさんかっけい、二乗→にじょう、二辺→にへん
+   - 動詞・形容詞: 成り立つ→なりたつ、当てはめる→あてはめる
+   - 迷ったらひらがなにする（読めるかどうかではなく、TTS が正しく読むかで判断）
+2. **数字・数式は話し言葉で全てひらがな/カタカナに**
+   - `3cm` → `さんセンチ`、`25` → `にじゅうご`、`a²` → `エーのにじょう`
+   - 算用数字や記号（+, =, ², √）は絶対使わない
+3. **句読点で間をコントロール**
+   - 式の区切りに読点「、」を入れる: 「エーのにじょう、たす、ビーのにじょう」
+   - 文末は必ず句点「。」で終える
+4. **変数はカタカナで**: x→エックス、y→ワイ、a→エー、b→ビー、c→シー、n→エヌ
+5. **日常的に使う漢字は漢字のままでOK**: 問題、確認、長さ、計算、注意 など
+
 **色使いルール:**
 - ヘッダー: BLUE
 - 強調・ステップ: YELLOW
 - 正解・結論: GREEN
 - 間違い・注意: RED
+
+### Step 1.5: Kaggle で音声生成
+
+Manim スクリプト内の全 `with self.voiceover(text="...")` のテキストを抽出し、Kaggle で一括生成する。
+
+```python
+import sys, os
+sys.path.insert(0, '/home/yuki/.claude/skills/atama/scripts')
+os.environ["KAGGLE_API_TOKEN"] = "KGAT_c63d682a04aa3e79c14b4e5d93c936cf"
+
+from qwen3_tts_service import Qwen3TTSService
+
+texts = [
+    # Manim スクリプトから抽出した全ナレーションテキスト
+    "テキスト1...",
+    "テキスト2...",
+]
+Qwen3TTSService.kaggle_generate(texts)
+```
+
+- fine-tuned モデル（`YUKI66/qwen3-tts-1.7b-finetuned`）+ ref_audio の voice clone で生成
+- Kaggle GPU (P100 16GB) で 1.7B モデルは約14GB使用（ギリギリ収まる）
+- 生成済み音声は `~/.claude/skills/atama/scripts/voice_cache/` にキャッシュされる
+- 同じテキストは再生成されない（ハッシュで管理）
+- Kaggle の push → 完了 → download まで自動で待機する
 
 ### Step 2: レンダリング
 
@@ -383,6 +423,7 @@ cd /tmp/hoshu_material && manim render -qm --format mp4 {単元名}_video.py Hos
 - `-qm`: 720p30（中品質。高品質 `-qh` は時間がかかりすぎる）
 - 出力先: `/tmp/hoshu_material/media/videos/{単元名}_video/720p30/HoshuVideo.mp4`
 - レンダリングには3-10分かかる
+- 音声は Step 1.5 でキャッシュ済みのものが自動で使われる
 
 ### Step 3: 出力ファイルの確認
 
