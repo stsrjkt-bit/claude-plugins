@@ -8,10 +8,11 @@ SCRIPTS_DIR = Path(__file__).parent
 
 def download_model():
     import json
+    from pathlib import Path
     from huggingface_hub import snapshot_download
     snapshot_download(repo_id=HF_MODEL_ID, local_dir=MODEL_DIR)
     # Patch config: tts_model_type must be "base" for generate_voice_clone to work
-    config_path = f"{MODEL_DIR}/config.json"
+    config_path = Path(MODEL_DIR) / "config.json"
     with open(config_path) as f:
         config = json.load(f)
     config["tts_model_type"] = "base"

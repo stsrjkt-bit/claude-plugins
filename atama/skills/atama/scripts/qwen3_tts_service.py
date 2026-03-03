@@ -110,23 +110,21 @@ class Qwen3TTSService(SpeechService):
         TTSModel = modal.Cls.from_name("qwen3-tts", "TTSModel")
         model = TTSModel()
 
+        results = list(model.generate.map(
+            pending, return_exceptions=True, wrap_returned_exceptions=False,
+        ))
+
         failed = []
-        for i, text in enumerate(pending):
+        for i, (text, result) in enumerate(zip(pending, results)):
             h = _text_hash(text)
-            for attempt in range(3):
-                try:
-                    result = model.generate.remote(text)
-                    dst = os.path.join(output_dir, f"{h}.wav")
-                    with open(dst, "wb") as f:
-                        f.write(result["wav"])
-                    print(f"  [{i+1}/{len(pending)}] {h} done ({len(result['wav'])} bytes)")
-                    break
-                except Exception as e:
-                    if attempt < 2:
-                        print(f"  [{i+1}/{len(pending)}] {h} retry {attempt+1}/2: {e}")
-                    else:
-                        print(f"  [{i+1}/{len(pending)}] {h} FAILED: {e}")
-                        failed.append(text)
+            if isinstance(result, Exception):
+                print(f"  [{i+1}/{len(pending)}] {h} FAILED: {result}")
+                failed.append(text)
+                continue
+            dst = os.path.join(output_dir, f"{h}.wav")
+            with open(dst, "wb") as f:
+                f.write(result["wav"])
+            print(f"  [{i+1}/{len(pending)}] {h} done ({len(result['wav'])} bytes)")
 
         if failed:
             raise RuntimeError(f"{len(failed)}/{len(pending)} clips failed to generate")
