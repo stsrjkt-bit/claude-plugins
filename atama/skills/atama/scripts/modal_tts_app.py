@@ -25,7 +25,10 @@ image = (
     .pip_install("qwen_tts", "soundfile", "torch", "huggingface_hub", "hf_transfer")
     .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
     .add_local_file(str(SCRIPTS_DIR / "voice_ref.wav"), remote_path=REF_AUDIO_PATH, copy=True)
-    .run_function(download_model)  # ビルド時に HF モデルを焼き込み（GPU 不要）
+    .run_function(
+        download_model,
+        secrets=[modal.Secret.from_name("huggingface")],  # private repo アクセス用
+    )
 )
 
 app = modal.App("qwen3-tts", image=image)
