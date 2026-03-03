@@ -75,10 +75,14 @@ manim_image = (
         "open(p,'w').write(t);"
         "print('Patched modify_audio.py: get_duration now uses sox')"
         "\"",
+        # パッチ適用の検証
+        "python -c \"from manim_voiceover.modify_audio import get_duration; "
+        "import inspect; assert 'sox' in inspect.getsource(get_duration), 'patch failed'\"",
     )
 )
 
 # 簡易 qwen3_tts_service.py — キャッシュ参照のみ（Modal/HF 呼び出しなし）
+# NOTE: qwen3_tts_service.py の generate_from_text() と同期を保つこと
 _STUB_TTS_SERVICE = '''\
 import hashlib, os, shutil
 from pathlib import Path
@@ -129,12 +133,17 @@ class Qwen3TTSService(SpeechService):
     scaledown_window=120,
     min_containers=0,
 )
-def render_video(script_content: str, voice_files: dict[str, bytes]) -> bytes:
+def render_video(
+    script_content: str,
+    voice_files: dict[str, bytes],
+    scene_name: str = "",
+) -> bytes:
     """Manim スクリプトを Modal CPU でレンダリングし、MP4 を返す。
 
     Args:
         script_content: Manim .py スクリプトの中身（文字列）
         voice_files: {"<hash>.wav": bytes, ...} 音声ファイル群
+        scene_name: レンダリングするシーンクラス名。省略時はスクリプトから自動検出
 
     Returns:
         MP4 ファイルのバイト列
@@ -164,9 +173,15 @@ def render_video(script_content: str, voice_files: dict[str, bytes]) -> bytes:
     script_path = work / "scene.py"
     script_path.write_text(script)
 
-    # 4. シーンクラス名を検出
-    match = re.search(r"class\s+(\w+)\s*\(", script)
-    scene_name = match.group(1) if match else "HoshuVideo"
+    # 4. シーンクラス名を検出（明示指定がなければ Scene/VoiceoverScene 継承クラスを探す）
+    if not scene_name:
+        match = re.search(
+            r"class\s+(\w+)\s*\(\s*(?:VoiceoverScene|Scene|ThreeDScene|MovingCameraScene)",
+            script,
+        )
+        if not match:
+            match = re.search(r"class\s+(\w+)\s*\(", script)
+        scene_name = match.group(1) if match else "HoshuVideo"
 
     # 5. manim render
     result = subprocess.run(

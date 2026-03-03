@@ -425,12 +425,19 @@ render_video = modal.Function.from_name("qwen3-tts", "render_video")
 
 # スクリプトと音声ファイルを読み込み
 script = open("/tmp/hoshu_material/{単元名}_video.py").read()
-voice_files = {}
-for wav in Path("/home/yuki/.claude/skills/atama/scripts/voice_cache/").glob("*.wav"):
-    voice_files[wav.name] = wav.read_bytes()
 
-# Modal CPU 8コアで実行
-mp4_bytes = render_video.remote(script, voice_files)
+# voice_cache から今回のスクリプトで使う WAV だけ送信（不要ファイルを除外）
+import hashlib, re
+texts = re.findall(r'voiceover\(\s*text=["\'](.+?)["\']', script)
+hashes = {hashlib.md5(t.encode()).hexdigest()[:16] for t in texts}
+voice_files = {}
+cache_dir = Path("/home/yuki/.claude/skills/atama/scripts/voice_cache/")
+for wav in cache_dir.glob("*.wav"):
+    if wav.stem in hashes:
+        voice_files[wav.name] = wav.read_bytes()
+
+# Modal CPU 8コアで実行（scene_name は省略可、自動検出される）
+mp4_bytes = render_video.remote(script, voice_files, scene_name="HoshuVideo")
 
 # 結果を保存
 output_path = "/tmp/hoshu_material/{単元名}_video.mp4"
