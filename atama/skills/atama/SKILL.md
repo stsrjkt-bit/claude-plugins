@@ -413,23 +413,45 @@ Qwen3TTSService.modal_generate(texts)
 - 同じテキストは再生成されない（ハッシュで管理）
 - アイドルコスト $0（min_containers=0、scaledown_window=300秒）
 
-### Step 2: レンダリング
+### Step 2: レンダリング（Modal CPU）
 
-```bash
-cd /tmp/hoshu_material && manim render -qm --format mp4 {単元名}_video.py HoshuVideo
+Modal の `render_video` 関数でレンダリングする。ローカル manim は使わない。
+
+```python
+import modal
+from pathlib import Path
+
+render_video = modal.Function.from_name("qwen3-tts", "render_video")
+
+# スクリプトと音声ファイルを読み込み
+script = open("/tmp/hoshu_material/{単元名}_video.py").read()
+voice_files = {}
+for wav in Path("/home/yuki/.claude/skills/atama/scripts/voice_cache/").glob("*.wav"):
+    voice_files[wav.name] = wav.read_bytes()
+
+# Modal CPU 8コアで実行
+mp4_bytes = render_video.remote(script, voice_files)
+
+# 結果を保存
+output_path = "/tmp/hoshu_material/{単元名}_video.mp4"
+with open(output_path, "wb") as f:
+    f.write(mp4_bytes)
+print(f"Rendered: {len(mp4_bytes)} bytes -> {output_path}")
 ```
 
-- `-qm`: 720p30（中品質。高品質 `-qh` は時間がかかりすぎる）
-- 出力先: `/tmp/hoshu_material/media/videos/{単元名}_video/720p30/HoshuVideo.mp4`
-- レンダリングには3-10分かかる
-- 音声は Step 1.5 でキャッシュ済みのものが自動で使われる
+- Modal CPU 8コア × 最大10分（`timeout=600`）
+- voice_cache/ の .wav ファイルは自動送信される
+- コンテナ内にスタブ `qwen3_tts_service.py` が自動配置される（キャッシュ参照のみ）
+- スクリプト内の `sys.path.insert` は自動で `/work` に書き換わる
+- 出力: MP4 バイト列がローカルに返る
+- コスト: ~$0.03/回（無料枠 $30 で余裕）
 
 ### Step 3: 出力ファイルの確認
 
 ```bash
-ls -lh /tmp/hoshu_material/media/videos/{単元名}_video/720p30/HoshuVideo.mp4
+ls -lh /tmp/hoshu_material/{単元名}_video.mp4
 ffprobe -v quiet -show_entries format=duration,size -of default=noprint_wrappers=1 \
-  /tmp/hoshu_material/media/videos/{単元名}_video/720p30/HoshuVideo.mp4
+  /tmp/hoshu_material/{単元名}_video.mp4
 ```
 
 - 再生時間と容量を確認・報告する
