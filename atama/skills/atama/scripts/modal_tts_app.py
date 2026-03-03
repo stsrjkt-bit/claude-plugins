@@ -159,7 +159,8 @@ def render_video(
     cache_dir = work / "voice_cache"
     cache_dir.mkdir(exist_ok=True)
     for name, data in voice_files.items():
-        (cache_dir / name).write_bytes(data)
+        safe_name = Path(name).name  # path traversal 防止
+        (cache_dir / safe_name).write_bytes(data)
 
     # 2. スタブ qwen3_tts_service.py を配置
     (work / "qwen3_tts_service.py").write_text(_STUB_TTS_SERVICE)

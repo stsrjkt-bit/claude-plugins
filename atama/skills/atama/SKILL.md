@@ -424,7 +424,7 @@ from pathlib import Path
 render_video = modal.Function.from_name("qwen3-tts", "render_video")
 
 # スクリプトと音声ファイルを読み込み
-script = open("/tmp/hoshu_material/{単元名}_video.py").read()
+script = Path("/tmp/hoshu_material/{単元名}_video.py").read_text()
 
 # voice_cache から今回のスクリプトで使う WAV だけ送信（不要ファイルを除外）
 import hashlib, re
