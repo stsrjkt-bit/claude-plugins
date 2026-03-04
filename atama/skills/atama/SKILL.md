@@ -520,18 +520,25 @@ echo "PRINT_ID=${PRINT_ID}"
 Phase 11.5 で動画が生成されている場合、R2 に直接アップロードし DB を更新する。
 **Edge Function（hoshu-video-upload）はタイムアウトしやすいため使わない。**
 
-```python
+以下を1つの bash スクリプトとして実行する（`PRINT_ID` は Step 3 で取得済み）:
+
+```bash
+source ~/.env.studygram
+VIDEO_FILE="/tmp/hoshu_material/{単元名}_video_final.mp4"
+if [ -f "$VIDEO_FILE" ]; then
+  VIDEO_SIZE=$(stat -c%s "$VIDEO_FILE")
+  VIDEO_KEY="prints/${PRINT_ID}/video.mp4"
+
+  # R2 に直接アップロード（boto3 使用）
+  python3 << PYEOF
 import boto3, os
 from botocore.config import Config
-
-# ~/studygram/.env から R2 認証情報を読み込み
 env = {}
 with open(os.path.expanduser("~/studygram/.env")) as f:
     for line in f:
         if "=" in line and not line.startswith("#"):
             k, v = line.strip().split("=", 1)
             env[k] = v.strip('"')
-
 s3 = boto3.client("s3",
     endpoint_url=env["R2_ENDPOINT"],
     aws_access_key_id=env["R2_ACCESS_KEY_ID"],
@@ -539,29 +546,26 @@ s3 = boto3.client("s3",
     config=Config(signature_version="s3v4"),
     region_name="auto",
 )
-
-video_key = f"prints/{PRINT_ID}/video.mp4"
-video_file = "/tmp/hoshu_material/{単元名}_video_final.mp4"
-s3.upload_file(video_file, env["R2_BUCKET_NAME"], video_key,
+s3.upload_file("${VIDEO_FILE}", env["R2_BUCKET_NAME"], "${VIDEO_KEY}",
     ExtraArgs={"ContentType": "video/mp4"})
-video_size = os.path.getsize(video_file)
-```
+print(f"Uploaded to R2: ${VIDEO_KEY}")
+PYEOF
 
-R2 アップロード後、DB レコードを更新:
-```bash
-source ~/.env.studygram
-curl -s "${SUPABASE_URL}/rest/v1/hoshu_prints?id=eq.${PRINT_ID}" \
-  -X PATCH \
-  -H "apikey: ${SUPABASE_ANON_KEY}" \
-  -H "Authorization: Bearer ${ADMIN_ACCESS_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -H "Prefer: return=minimal" \
-  -d "{\"video_r2_key\":\"prints/${PRINT_ID}/video.mp4\",\"video_size\":${VIDEO_SIZE}}"
+  # DB レコードを更新
+  curl -s "${SUPABASE_URL}/rest/v1/hoshu_prints?id=eq.${PRINT_ID}" \
+    -X PATCH \
+    -H "apikey: ${SUPABASE_ANON_KEY}" \
+    -H "Authorization: Bearer ${ADMIN_ACCESS_TOKEN}" \
+    -H "Content-Type: application/json" \
+    -H "Prefer: return=minimal" \
+    -d "{\"video_r2_key\":\"${VIDEO_KEY}\",\"video_size\":${VIDEO_SIZE}}"
+  echo "Video uploaded and DB updated"
+fi
 ```
 
 - `PRINT_ID` は Step 3 の PDF アップロードで取得済み
 - `_final.mp4`（圧縮済み）をアップロードする
-- 動画ファイルが存在しない場合（レンダリング失敗等）はスキップし、プリントのみアップロード
+- 動画ファイルが存在しない場合はスキップし、プリントのみアップロード
 - `boto3` が未インストールなら `pip3 install boto3 --break-system-packages`
 
 #### Step 4: 生徒に割り当て
