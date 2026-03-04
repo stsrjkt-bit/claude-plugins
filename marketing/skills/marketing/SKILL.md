@@ -127,7 +127,7 @@ mcp__firecrawl__firecrawl_scrape で競合サイトを確認
 1. **GA4 30日レポート取得**
    ```
    analytics-mcp: run_report
-   - property_id: 508435059
+   - property_id: <PMCセクション7 の ga4_property_id>
    - dimensions: sessionDefaultChannelGroup, pagePath
    - metrics: activeUsers, sessions, conversions
    - dimension_filter: country = Japan
@@ -136,7 +136,7 @@ mcp__firecrawl__firecrawl_scrape で競合サイトを確認
 2. **Search Console 28日レポート取得**
    ```
    mcp-gsc: get_advanced_search_analytics
-   - site_url: sc-domain:stsrjk.com
+   - site_url: <PMCセクション7 の search_console_site_url>
    - dimensions: query
    - sort_by: impressions descending
    ```
@@ -199,7 +199,7 @@ mcp__firecrawl__firecrawl_scrape で競合サイトを確認
 1. **Firecrawlで沼津の塾サイトをスクレイプ**
    ```
    firecrawl: firecrawl_search
-   query: "沼津 塾" OR "沼津市 学習塾"
+   query: <PMCセクション3（地域・商圏）の地名> + <PMCセクション2（カテゴリ）のKW>
    ```
 2. 上位10サイトのmeta title/description取得
 3. 各競合の:
