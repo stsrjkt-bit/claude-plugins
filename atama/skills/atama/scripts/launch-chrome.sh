@@ -32,6 +32,7 @@ nohup google-chrome \
   --metrics-recording-only \
   --mute-audio \
   --remote-debugging-port=$REMOTE_PORT \
+  --remote-allow-origins=* \
   --user-data-dir="$USER_DATA_DIR" \
   "$LOGIN_URL" \
   > /tmp/chrome-atama.log 2>&1 &

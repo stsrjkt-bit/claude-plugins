@@ -161,6 +161,13 @@ def find_student(sb: Supabase, name: str) -> dict | None:
         rows = sb.get("app_users", f"name=ilike.{urllib.parse.quote(parts[0])}*&role=eq.student&select=id,name")
         if rows:
             return rows[0]
+    # スペースなし入力 → 各位置にスペースを挿入して試す（例: "鎮守杏" → "鎮守 杏"）
+    if " " not in name and "　" not in name and len(name) >= 2:
+        for i in range(1, len(name)):
+            spaced = name[:i] + " " + name[i:]
+            rows = sb.get("app_users", f"name=eq.{urllib.parse.quote(spaced)}&role=eq.student&select=id,name")
+            if rows:
+                return rows[0]
     return None
 
 
