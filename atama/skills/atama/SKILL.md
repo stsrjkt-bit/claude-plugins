@@ -384,9 +384,11 @@ cd ~/.claude/skills/atama/scripts && node generate-pdf.mjs /tmp/hoshu_material/{
 Phase 7-8 の分析結果に基づき、つまずきポイントを解説する Manim アニメーション動画を生成する。
 
 ### 前提条件
-- `modal` パッケージ + `modal token new` でセットアップ済みであること
-- Modal アプリ `manim-render` がデプロイ済みであること（`~/.claude/skills/atama/scripts/modal_tts_app.py`）
-- 音声は Microsoft Edge TTS（`ja-JP-KeitaNeural`）をコンテナ内でオンザフライ生成（GPU不要）
+- ローカルに `manim` v0.20.1, `manim-voiceover`, `sox` がインストール済みであること
+- 音声は **Gemini 2.5 Pro TTS**（`gemini-2.5-pro-preview-tts`）でオンザフライ生成（GPU不要、API キーのみ）
+- `~/studygram/.env` に `GEMINI_API_KEY` と `GEMINI_TTS_MODEL` が設定済みであること
+- TTS ラッパー: `~/.claude/skills/atama/scripts/gemini_tts_service.py`（`GeminiTTSService`）
+- ボイス比較テスト結果: Gemini Pro TTS > Chirp 3 HD > Edge TTS（2026-03 検証済み）
 
 ### Step 1: 動画脚本JSON生成 → Manim スクリプト変換
 
@@ -417,16 +419,21 @@ client = genai.Client(api_key=api_key)
 ```
 
 **プロンプトに含める情報:**
+- 生徒の呼び方（Phase 5 で確認したニックネーム。例:「あんさん」）
 - 生徒名・つまずき内容（Phase 7-8 の分析結果）
 - 足場がけルール: 各シーンは「前のシーンで学んだ知識だけで理解できること」
-- ナレーションは話し言葉（「〜なんですよ」「〜でしょう？」）
+- ナレーションは話し言葉（「〜なんですよ」「〜でしょう？」）で、生徒への呼びかけは Phase 5 の呼び方を使う
 - 数式のナレーション読み方ルール（分数は「○ぶんの○」等）
 - アニメーションタイプ一覧（write_math, transform_math, draw_shape, highlight 等）
+- **ボイスの選択**: Gemini Pro TTS のボイス名を Gemini に選ばせる（生徒の性別・学年・ナレーションの雰囲気から判断）
+  - 利用可能ボイス: Puck（明るい男性）, Kore（落ち着いた女性）, Charon（深い男性）, Fenrir（活発男性）, Aoede（温かい女性） 等
+  - 女子生徒向けには爽やか系男性ボイス（Puck）を推奨
 
 **Gemini に要求する JSON 出力形式:**
 ```json
 {
   "title": "おうぎ形の応用",
+  "voice": "Puck",
   "scenes": [
     {
       "scene_id": "scene1",
@@ -464,12 +471,13 @@ sys.path.insert(0, '/home/yuki/.claude/skills/atama/scripts')
 
 from manim import *
 from manim_voiceover import VoiceoverScene
-from edge_service import EdgeTTSService
+from gemini_tts_service import GeminiTTSService
 
 class HoshuVideo(VoiceoverScene):
     def setup(self):
         super().setup()
-        self.set_speech_service(EdgeTTSService())
+        # voice は脚本 JSON の voice フィールドの値を使う
+        self.set_speech_service(GeminiTTSService(voice_name="Puck"))
 
     def construct(self):
         self.scene_intro()
@@ -493,7 +501,7 @@ class HoshuVideo(VoiceoverScene):
 - voiceover の text は自然な日本語話し言葉で書く（「サイン t は」「コサイン2乗は」等）
 
 **voiceover テキストの TTS 最適化ルール:**
-Edge TTS（Microsoft）は日本語の読み上げ精度が高いが、以下に注意:
+Gemini Pro TTS は日本語の自然な読み上げが得意。プロンプト制御（`prompt_prefix`）で教師口調を指示できる。
 
 1. **分数は「分母ぶんの分子」の順で読む（厳守）**
    - `a/360` → 「さんびゃくろくじゅうぶんのエー」（✕「エーぶんのさんびゃくろくじゅう」）
@@ -506,7 +514,7 @@ Edge TTS（Microsoft）は日本語の読み上げ精度が高いが、以下に
    - 式の区切りに読点「、」を入れる: 「エーのにじょう、たす、ビーのにじょう」
    - 文末は必ず句点「。」で終える
 4. **変数はカタカナで**: x→エックス、y→ワイ、a→エー、b→ビー、c→シー、n→エヌ
-5. **漢字はそのままでOK**: Edge TTS は漢字の読みが正確なので、無理にひらがなに開く必要はない
+5. **漢字はそのままでOK**: Gemini Pro TTS は漢字の読みが正確なので、無理にひらがなに開く必要はない
 
 **色使いルール:**
 - ヘッダー: BLUE
@@ -514,35 +522,18 @@ Edge TTS（Microsoft）は日本語の読み上げ精度が高いが、以下に
 - 正解・結論: GREEN
 - 間違い・注意: RED
 
-### Step 2: レンダリング（Modal CPU）
+### Step 2: ローカルレンダリング
 
-Modal の `render_video` 関数でレンダリングする。ローカル manim は使わない。
-音声（Edge TTS）はコンテナ内でオンザフライ生成される。事前の音声生成ステップは不要。
+ローカルの manim でレンダリングする。Gemini Pro TTS API はローカルから直接呼び出す。
 
-```python
-import modal
-from pathlib import Path
-
-render_video = modal.Function.from_name("manim-render", "render_video")
-
-script = Path("/tmp/hoshu_material/{単元名}_video.py").read_text()
-
-# Modal CPU 8コアで実行（scene_name は省略可、自動検出される）
-mp4_bytes = render_video.remote(script, scene_name="HoshuVideo")
-
-# 結果を保存
-output_path = "/tmp/hoshu_material/{単元名}_video.mp4"
-with open(output_path, "wb") as f:
-    f.write(mp4_bytes)
-print(f"Rendered: {len(mp4_bytes)} bytes -> {output_path}")
+```bash
+cd /tmp/hoshu_material && manim render -qm --format mp4 {単元名}_video.py HoshuVideo
 ```
 
-- Modal CPU 8コア × 最大10分（`timeout=600`）
-- Edge TTS でコンテナ内オンザフライ音声生成（GPU不要）
-- スクリプト内の `sys.path.insert` は自動で `/work` に書き換わる
-- コンテナ内に `edge_service.py` スタブが自動配置される
-- 出力: MP4 バイト列がローカルに返る
-- コスト: ~$0.03/回（CPU のみ、$30/月無料枠で余裕）
+- ローカル manim v0.20.1 でレンダリング（Modal は `from_name` ハングの問題あり、非推奨）
+- Gemini Pro TTS API でオンザフライ音声生成（GPU不要、API キーのみ）
+- TTS API 呼び出しがシーン数分あるため、6-8シーンで3-5分かかる
+- 出力: `media/videos/{単元名}_video/720p30/HoshuVideo.mp4`
 
 ### Step 3: 動画圧縮＆確認
 
