@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """動画レビュアーモジュール — Gemini Flash で動画品質を検証する"""
 
-import json, os, sys, time
+import argparse
+import json
+import os
+import sys
+import time
+
+from google import genai
 
 
 def _load_env():
@@ -10,8 +16,8 @@ def _load_env():
         for line in f:
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
-                k, v = line.split("=", 1)
-                env_vars[k] = v.strip('"').strip("'")
+                k, v = map(str.strip, line.split("=", 1))
+                env_vars[k] = v.strip("'\"")
     return env_vars
 
 
@@ -31,7 +37,6 @@ def review_video(video_path: str, scene_spec: str) -> dict:
     if not api_key or not flash_model:
         raise RuntimeError("GEMINI_API_KEY or VITE_GEMINI_FLASH_MODEL not set in ~/studygram/.env")
 
-    from google import genai
     client = genai.Client(api_key=api_key)
 
     # 動画アップロード
@@ -41,7 +46,7 @@ def review_video(video_path: str, scene_spec: str) -> dict:
 
     while video_file.state == "PROCESSING":
         print("  処理中...")
-        time.sleep(3)
+        time.sleep(10)
         video_file = client.files.get(name=video_file.name)
 
     if video_file.state != "ACTIVE":
@@ -119,20 +124,19 @@ def print_review(review: dict):
     print(f"  {review.get('overall_assessment', '')}")
 
 
-# CLI実行用
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: python video_reviewer.py <video.mp4> <scene_spec.txt>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="動画品質レビュー（Gemini Flash）")
+    parser.add_argument("video", help="レビューする動画ファイル (MP4)")
+    parser.add_argument("spec", help="シーン仕様書 (テキストファイル)")
+    args = parser.parse_args()
 
-    video_path = sys.argv[1]
-    with open(sys.argv[2], "r") as f:
+    with open(args.spec, "r") as f:
         scene_spec = f.read()
 
-    review = review_video(video_path, scene_spec)
+    review = review_video(args.video, scene_spec)
 
     # 保存
-    out_path = video_path.rsplit(".", 1)[0] + "_review.json"
+    out_path = args.video.rsplit(".", 1)[0] + "_review.json"
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(review, f, ensure_ascii=False, indent=2)
     print(f"レビュー保存: {out_path}")

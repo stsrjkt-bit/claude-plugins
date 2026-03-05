@@ -30,10 +30,14 @@ Usage:
 import argparse
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
+
+import boto3
 
 # ---------------------------------------------------------------------------
 # env 読み込み
@@ -47,8 +51,9 @@ def load_env() -> dict:
         for line in f:
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
-                k, v = line.split("=", 1)
-                env[k] = v.strip('"').strip("'")
+                k, v = map(str.strip, line.split("=", 1))
+                env[k] = v.strip("'\"")
+
     return env
 
 
@@ -117,7 +122,6 @@ class Supabase:
 # ---------------------------------------------------------------------------
 
 def upload_to_r2(env: dict, local_path: str, r2_key: str, content_type: str) -> int:
-    import boto3
     s3 = boto3.client(
         "s3",
         endpoint_url=env["R2_ENDPOINT"],
@@ -198,6 +202,11 @@ def main():
     if not args.replace and not (args.student and args.title and args.subject):
         parser.error("新規作成時は --student, --title, --subject が必須です")
 
+    # --replace はUUID形式のみ許可（PostgRESTインジェクション・パス横断防止）
+    UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I)
+    if args.replace and not UUID_RE.match(args.replace):
+        parser.error(f"--replace はUUID形式で指定してください: {args.replace}")
+
     for path in [args.problem, args.answer] + ([args.video] if args.video else []):
         if not os.path.exists(path):
             print(f"ERROR: ファイルが見つかりません: {path}", file=sys.stderr)
@@ -237,13 +246,12 @@ def main():
         print(f"生徒: {student['name']} (id={student['id']})")
 
         admin_id = find_admin(sb)
-        print_id = None  # insert で自動生成
+        print_id = None  # 下の uuid.uuid4() で生成
 
     # --- R2 アップロード ---
     prefix = f"prints/{args.replace}" if args.replace else None
 
     if not args.replace:
-        import uuid
         print_id = str(uuid.uuid4())
         prefix = f"prints/{print_id}"
 
