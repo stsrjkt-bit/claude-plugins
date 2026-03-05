@@ -31,6 +31,7 @@ import argparse
 import json
 import os
 import sys
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -77,10 +78,20 @@ class Supabase:
             h.update(extra)
         return h
 
+    def _request(self, req: urllib.request.Request):
+        try:
+            return urllib.request.urlopen(req)
+        except urllib.error.HTTPError as e:
+            body = e.read().decode("utf-8", errors="replace")
+            print(f"ERROR: Supabase {e.code} {e.reason}", file=sys.stderr)
+            print(f"  URL: {req.full_url}", file=sys.stderr)
+            print(f"  Body: {body[:500]}", file=sys.stderr)
+            sys.exit(1)
+
     def get(self, table: str, params: str) -> list:
         url = f"{self.url}/rest/v1/{table}?{params}"
         req = urllib.request.Request(url, headers=self._headers())
-        with urllib.request.urlopen(req) as resp:
+        with self._request(req) as resp:
             return json.loads(resp.read())
 
     def post(self, table: str, data: dict) -> dict:
@@ -88,7 +99,7 @@ class Supabase:
         body = json.dumps(data).encode()
         headers = self._headers({"Prefer": "return=representation"})
         req = urllib.request.Request(url, data=body, headers=headers, method="POST")
-        with urllib.request.urlopen(req) as resp:
+        with self._request(req) as resp:
             rows = json.loads(resp.read())
             return rows[0] if rows else {}
 
@@ -97,7 +108,7 @@ class Supabase:
         body = json.dumps(data).encode()
         headers = self._headers({"Prefer": "return=minimal"})
         req = urllib.request.Request(url, data=body, headers=headers, method="PATCH")
-        with urllib.request.urlopen(req) as resp:
+        with self._request(req) as resp:
             pass  # 204 No Content
 
 

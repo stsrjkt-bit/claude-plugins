@@ -96,7 +96,12 @@ JSON以外のテキストは一切出力しないこと。
     elif "```" in raw:
         raw = raw.split("```", 1)[1].split("```", 1)[0]
 
-    return json.loads(raw)
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError as e:
+        print(f"WARNING: Gemini JSON パース失敗: {e}", file=sys.stderr)
+        print(f"  Raw output: {response.text[:300]}", file=sys.stderr)
+        return {"issues": [], "overall_assessment": f"[JSONパース失敗] {response.text[:500]}"}
 
 
 def print_review(review: dict):
