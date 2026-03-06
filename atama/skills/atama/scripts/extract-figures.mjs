@@ -9,11 +9,15 @@
 //   - Chrome が --remote-debugging-port=9222 で起動済み
 //   - atama+ COACH のページが開いている
 //   - モーダルが開いている状態（ion-modal.show-modal が存在する）
-//   - ws モジュールが /tmp/node_modules/ にインストール済み
+//   - ws モジュールがスクリプトと同じディレクトリにインストール済み
+//     (cd ~/.claude/skills/atama/scripts && npm install ws)
 
-import { WebSocket } from '/tmp/node_modules/ws/wrapper.mjs';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const { WebSocket } = require('ws');
 import http from 'http';
 import fs from 'fs';
+import path from 'path';
 import { parseArgs } from 'util';
 
 const { values: args } = parseArgs({
@@ -72,7 +76,8 @@ async function evalJS(ws, expression) {
 }
 
 async function main() {
-  const { prefix, outdir } = args;
+  const prefix = path.basename(args.prefix);
+  const outdir = path.resolve(args.outdir);
   fs.mkdirSync(outdir, { recursive: true });
 
   // Chrome に接続
@@ -98,7 +103,7 @@ async function main() {
           results.push({
             w: img.naturalWidth,
             h: img.naturalHeight,
-            data: img.src.replace(/^data:image\\/\\w+;base64,/, '')
+            data: img.src.split(',')[1]
           });
         }
       });

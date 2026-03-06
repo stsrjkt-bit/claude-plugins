@@ -125,7 +125,7 @@ source ~/.env.atama && echo "ID=$ATAMA_ID PW_LEN=${#ATAMA_PW}"
 ```
 `.env.atama` が存在しない場合はユーザーに手動入力を依頼。
 
-`evaluate_script` で ID/PW を入力:
+Bash で認証情報を読み取り、JS 文字列を構築して `evaluate_script` に渡す（`${ATAMA_ID}` と `${ATAMA_PW}` は bash の source で取得した値を JS 文字列内に展開する）:
 ```javascript
 () => {
   const inputs = document.querySelectorAll('input');
@@ -233,7 +233,7 @@ source ~/.env.atama && echo "ID=$ATAMA_ID PW_LEN=${#ATAMA_PW}"
 
 **base64 画像直接抽出方式を使う**（スクリーンショット方式は viewport 依存で図が切れるため非推奨）。
 
-前提: `/tmp/node_modules/ws/` が必要（なければ `cd /tmp && npm install ws`）
+前提: `ws` モジュールが必要（なければ `cd ~/.claude/skills/atama/scripts && npm install ws`）
 
 各セッションについて:
 1. セッション行を `click(uid)` でモーダルを開く
@@ -244,8 +244,8 @@ source ~/.env.atama && echo "ID=$ATAMA_ID PW_LEN=${#ATAMA_PW}"
      --prefix <セッション種別のプレフィックス> \
      --outdir /tmp/hoshu_material
    ```
-   - 演習: `--prefix kaitentai_enshu`
-   - 講義: `--prefix kaitentai_kougi`
+   - prefix はセッションごとにユニークにする（同種セッションが複数ある場合の上書きを防ぐ）
+   - 例: `--prefix enshu_0301`（種別+日付）、`--prefix kougi_0228_2`（種別+日付+連番）
    - スクリプトは CDP WebSocket (port 9222) でモーダル内の全 `data:image` を抽出し PNG 保存
 4. `take_snapshot` → 「閉じる」ボタンの uid で `click(uid)` してモーダルを閉じる
 5. 次のセッションへ
@@ -289,7 +289,9 @@ Claude 単独で足場がけ設計・数式・SVG を生成すると誤りが発
 
 ```python
 # ~/studygram/.env から GEMINI_API_KEY と GEMINI_PARSE_MODEL を読み込む（ハードコード禁止）
-import json, os, sys
+import json
+import os
+import sys
 from google import genai
 
 env_vars = {}
@@ -441,8 +443,8 @@ cd ~/.claude/skills/atama/scripts && node generate-pdf.mjs /tmp/hoshu_material/{
 #### 5b. JSON → Manim スクリプト変換
 
 ```python
-import sys
-sys.path.insert(0, '/home/yuki/.claude/skills/atama/scripts')
+import os, sys
+sys.path.insert(0, os.path.expanduser('~/.claude/skills/atama/scripts'))
 from manim import *
 from manim_voiceover import VoiceoverScene
 from gemini_tts_service import GeminiTTSService
