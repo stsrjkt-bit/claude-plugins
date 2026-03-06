@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "1fb58425b001",
+  "session_id": "ef04ff5f-9157-4e27-a916-996594e660f5",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-06T12:26:34.225647724Z",
+  "branch": "update/skill-improvements",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "instagram/skills/instagram/SKILL.md",
+    "ui-design-to-react/skills/ui-design-to-react/SKILL.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "59b8b5a323a4",
+  "token_usage": {
+    "input_tokens": 7,
+    "cache_creation_tokens": 14312,
+    "cache_read_tokens": 25003,
+    "output_tokens": 206,
+    "api_call_count": 3
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-06T12:26:34.144049507Z",
+    "agent_lines": 0,
+    "human_added": 2,
+    "human_modified": 163,
+    "human_removed": 0,
+    "total_committed": 2,
+    "agent_percentage": 0
+  }
+}

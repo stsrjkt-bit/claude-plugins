@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "1fb58425b001",
+  "strategy": "manual-commit",
+  "branch": "update/skill-improvements",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "instagram/skills/instagram/SKILL.md",
+    "ui-design-to-react/skills/ui-design-to-react/SKILL.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/1f/b58425b001/0/metadata.json",
+      "transcript": "/1f/b58425b001/0/full.jsonl",
+      "context": "/1f/b58425b001/0/context.md",
+      "content_hash": "/1f/b58425b001/0/content_hash.txt",
+      "prompt": "/1f/b58425b001/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 7,
+    "cache_creation_tokens": 14312,
+    "cache_read_tokens": 25003,
+    "output_tokens": 206,
+    "api_call_count": 3
+  }
+}
