@@ -32,9 +32,10 @@ Playwright WebKit (iPhone 14 デバイスプロファイル) でiOS Safari互換
 ### `run` (デフォルト): 既存テスト全実行
 
 ```bash
-cd /home/yuki/studygram
 npx playwright test e2e/ --project=webkit
 ```
+
+※ studygram リポジトリのルートで実行すること。
 
 全 `e2e/*.spec.ts` ファイルを WebKit で実行する。
 結果を確認し、失敗テストがあればスクリーンショットとエラー内容を報告する。
@@ -84,12 +85,14 @@ Playwright WebKit では `new Touch()` コンストラクタが使えない（`T
 
 ```javascript
 // page.setContent() のスクリプト内に以下を追加
+// canvas や div 等、タッチ対象の要素を指定する
+const target = document.getElementById('canvas');
 window._dispatchTouch = (type, x, y) => {
   const evt = new Event(type, { bubbles: true, cancelable: true });
-  const fakeTouch = { clientX: x, clientY: y, target: element, identifier: 0 };
+  const fakeTouch = { clientX: x, clientY: y, target, identifier: 0 };
   evt.touches = type === 'touchend' ? [] : [fakeTouch];
   evt.changedTouches = [fakeTouch];
-  element.dispatchEvent(evt);
+  target.dispatchEvent(evt);
   return evt.defaultPrevented;
 };
 ```
@@ -104,8 +107,8 @@ const result = await page.evaluate(async () => {
     await new Promise(r => setTimeout(r, 16));
     dispatch('touchmove', 50 + i * 30, 50 + i * 30);
   }
-  dispatch('touchend', 200, 200);
-  return someResult;
+  const wasPrevented = dispatch('touchend', 200, 200);
+  return wasPrevented;
 });
 ```
 
@@ -113,6 +116,7 @@ const result = await page.evaluate(async () => {
 
 ```typescript
 // passive listener では defaultPrevented が false になることを検証
+const target = document.getElementById('my-element')!;
 const evt = new Event('touchstart', { bubbles: true, cancelable: true });
 evt.touches = [{ clientX: 100, clientY: 100, target, identifier: 0 }];
 evt.changedTouches = evt.touches;
