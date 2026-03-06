@@ -1,45 +1,85 @@
 ---
 name: ui-design-to-react
 description: >
-  Stitch MCP + HTMLモック + Figmaキャプチャを組み合わせたUI制作ワークフロー。
-  デザインモック → Stitch生成 → 比較 → Figma統合 → React実装 の5フェーズ。
-  「UIを作りたい」「画面設計」「Stitchで生成」「モックからReact」等で発火。
+  HTMLモック → React実装のUI制作ワークフロー。
+  デザインモック制作 → ユーザー確認 → React実装 の3フェーズ。
+  「UIを作りたい」「画面設計」「モックからReact」「デザインモック」等で発火。
 user_invocable: true
 ---
 
 # /ui-design-to-react — UI制作ワークフロー
 
-Stitch MCP・HTMLモック・Figmaキャプチャを活用し、デザインからReact実装まで一気通貫で進めるスキル。
+HTMLモック制作からReact実装まで一気通貫で進めるスキル。
+
+## ⚠️ Stitch MCP プロンプトの鉄則（2026-03-04 確認済み）
+
+**Stitchへのプロンプトは短くシンプルな日本語で。詳細指定は絶対するな。**
+
+### ダメなプロンプト（実際に失敗）
+```
+Hero section for a Japanese cram school landing page.
+School name: さとう数理塾
+Brand blue: #0096e0, lime accent: #d6de26...
+No buttons, no navigation. Just the title and subtitle.
+Make it visually stunning — think Apple or Stripe hero sections.
+```
+→ 色・フォント・テキスト・レイアウトを細かく指定 → Stitchの創造性が死ぬ → ゴミが出る
+
+### 良いプロンプト（実際に成功）
+```
+さとう数理塾の中学生ページのヒーローセクションつくって
+```
+→ シンプルな日本語、デザインの自由度を与える → 高品質なデザインが出る
+
+### ルール
+1. **日本語で書け**（英語禁止）
+2. **1〜2文で済ませろ**（詳細な仕様を書くな）
+3. **色・フォント・レイアウトを指定するな**（Stitchに任せる）
+4. **テキストもStitchに任せろ**（あとからClaudeが実データに修正する）
+5. **セクション単位で依頼しろ**（ページ全体を一度に頼むな）
+6. **「ボタンなし」等の制約も書くな**（デザイン要素としてStitchが生成したものは後で取捨選択する）
+
+### セクション分割で依頼する
+LPは以下のようにセクション単位でStitchに依頼:
+- 「〇〇塾の中学生ページのヒーローセクションつくって」
+- 「学習塾のコース紹介カード（公立中向け・私立中向けの2つ）」
+- 「合格実績セクション。高校受験と大学受験の2カラム」
+- 「よくあるお悩みの横スクロールカード」
+
+Stitchが生成したテキスト・ダミーデータは**バグとして後から修正**すればよい。デザインの基盤を得ることが目的。
 
 ## 前提ツール
 
 | ツール | 用途 | 注意 |
 |--------|------|------|
-| Stitch MCP | テキスト→UI生成 | `TEXT_TO_UI_PRO` タイプのプロジェクト必須。生成に1〜2分かかる |
 | Playwright MCP | スクショ撮影・HTMLプレビュー | 「見るだけ」用途 |
 | Figma MCP | デザイン統合・キャプチャ | `figcap` エイリアスで hash URL 生成 |
 | Doppler | シークレット管理 | `doppler secrets get <KEY> --project sato-juku --config dev_studygram --plain` |
+| Stitch MCP | **アプリUI限定** | LP・Webページには使うな。ユーザーが明示的に「Stitch使え」と言った場合のみ |
 
 ## フローの全体像
 
 ```
-Phase 1: HTMLモック制作（Claude が仕様書として手書き）
+Phase 1: HTMLモック制作（Claude がデザイン本体として作り込む）
     ↓
-Phase 2: Stitch 生成（MCP で画面ごとに生成 ← これがデザイン本体）
+Phase 2: ユーザーブラウザ確認 + フィードバック
     ↓
-Phase 3: Stitch デザイン採用 + バグ修正（ユーザー確認後、バグのみ修正）
+Phase 3: Figma 統合（任意）
     ↓
-Phase 4: Figma 統合（キャプチャ → デザイン確定）
-    ↓
-Phase 5: React 実装（Stitch デザインを忠実にコード化）
+Phase 4: React 実装（HTMLモックを忠実にコード化）
 ```
 
-**Claude の役割**: Stitch 先生のデザインを現実のコードにする **黒子（実装者）**。UIデザインで対等という意識を持たない。企画されたアプリの機能がきちんと発揮される形で、Stitch のバグ含みデザインをさっと修正する裏方に徹する。
+**Claude の役割**: CLAUDE.md のデザイン原則に従い、攻めたHTMLモックを作る。ユーザー確認後、忠実にReact実装する。
 
-**スキップ可能**: 状況に応じて一部フェーズを省略できる。ただし **Stitch（Phase 2）は原則スキップ不可**。
-- デザインが既に確定（Stitch 生成済み） → Phase 5 から
-- Figma 不要 → Phase 1 → Phase 2 → Phase 3 → Phase 5
-- ユーザーが明示的に「Stitch不要」と指示した場合のみ Phase 2 をスキップできる
+## HTMLプレビューの公開方法
+
+ユーザーにHTMLを見せる必要がある場合:
+1. `gh gist create --public` でGistにアップ
+2. `https://gist.githack.com/{user}/{gist_id}/raw/{filename}` でブラウザ表示可能なURLを生成
+3. このURLをユーザーに渡す
+- **npx serve + localhost は使えない**（ユーザーがリモートChromebookのため）
+- **GitHub Pages は使えない**（privateリポジトリ、free planでは無効）
+- **Netlify CLI preview** は認証・インタラクティブ問題で不安定
 
 ---
 
@@ -106,97 +146,21 @@ Phase 5: React 実装（Stitch デザインを忠実にコード化）
 
 ---
 
-## Phase 2: Stitch 生成
+## Phase 2: ユーザーブラウザ確認
 
-**目的**: Stitch MCP で各画面のデザインを生成する。**これがデザインの本体**であり、Phase 5 で忠実にコード化する対象。
-
-### 前提
-
-- Stitch MCP が `~/.claude/mcp.json` に登録済みであること
-- `TEXT_TO_UI_PRO` タイプのプロジェクトを使うこと（`PROJECT_DESIGN` だとエラー）
-- 既存プロジェクトID: `6578710306801403070`
+**目的**: HTMLモックをユーザーに見せてフィードバックをもらう。
 
 ### 手順
 
-1. **ToolSearch で Stitch ツールを読み込み**:
-   ```
-   ToolSearch: "+stitch generate"
-   ```
-
-2. **画面ごとに `generate_screen_from_text` を呼ぶ**:
-   - 1画面ずつ生成（バッチ不可）
-   - プロンプトにはHTMLモックの構造を要約して渡す
-   - ダークテーマ、配色、フォント等の指定を含める
-   - 生成に1〜2分かかる。タイムアウトに注意
-
-3. **生成結果を取得**:
-   - `get_screen_image` でスクショ PNG を保存: `stitch-screen{N}.png`
-   - `get_screen_code` でHTML を保存: `stitch-html-screen{N}.html`
-   - Playwright で HTML をレンダリングしてスクショも撮る: `stitch-render-screen{N}.png`
-
-### Stitch プロンプトのコツ
-
-```
-Mobile screen (375x812). Dark theme (gray-950 background).
-Amber-500/600 accent color. Font: Space Grotesk + Noto Sans JP.
-
-Screen: [画面名]
-- [要素1の説明]
-- [要素2の説明]
-- ...
-
-Style: rounded-2xl cards, subtle borders (gray-700/800),
-stagger fade-in animations, Material Symbols Outlined icons.
-```
-
-- **具体的に書く**: 「4択カード」ではなく「2x2 grid of cards, each showing element symbol (Li, Ca, Si, Cu) in 2xl font-black」
-- **既存モックを参照**: 「similar to the attached HTML structure but with different layout」
+1. `gh gist create --public` でHTMLモックをGistにアップ
+2. githack URLを生成してユーザーに渡す: `https://gist.githack.com/{user}/{gist_id}/raw/{filename}`
+3. フィードバックを反映してHTMLモックを修正
+4. 修正版を再度Gistにアップして確認
+5. ユーザーOKが出たらPhase 3/4へ
 
 ---
 
-## Phase 3: Stitch デザイン採用 + バグ修正
-
-**目的**: Stitch 生成デザインを **そのまま採用** し、バグのみを修正する。
-
-### ⚠️ 最重要原則: Claude はデザインの黒子
-
-**Claude は Stitch 先生のデザインしたUIを現実のコードにする実装者。UIデザインで対等という意識を持たないこと。**
-
-- Stitch のデザインは原則 **全採用**。Claude の HTMLモックは Stitch へのインプット（仕様書）でしかない
-- Claude が「こっちの方がいい」と判断して Stitch の要素を省略・変更することは **絶対禁止**
-- 修正して良いのは **バグのみ**:
-  - 英語テキスト → 日本語化
-  - ワークフロー不整合（ボタン遷移先が実装と合わない等）
-  - データ構造との齟齬（ダミーデータ→実データ対応）
-- **Stitch にあるが現在のデータ型にない要素** → 型拡張を提案（省略は禁止）
-- デザイン判断が必要な場合は **必ずユーザーに聞く**（AskUserQuestion）
-
-### ⚠️ Hard Gate: ユーザーブラウザ確認必須
-
-1. Stitch 生成 HTML を `chrome` でユーザーのブラウザに表示し、**実物を確認してもらう**
-2. バグ一覧を提示し、修正方針の承認を得る
-3. ユーザーの指示なしに Phase 4/5 に進んではいけない
-
-### 手順
-
-1. **Stitch 生成結果をユーザーに見せる**:
-   - `npx serve` でローカルサーバー起動
-   - `chrome http://localhost:{PORT}/stitch-html-screen{N}.html` で各画面を開く
-   - HTMLモックとの比較が必要なら `stitch-comparison.html` も用意
-
-2. **バグ一覧を作成**: Stitch HTML を読み、以下を洗い出す
-   - 英語テキスト（日本語に修正必要）
-   - ダミーデータ（実データ構造と異なる）
-   - ワークフローの不整合（ボタン遷移先が実装と合わない等）
-   - **Stitch にあるが現在のデータ型にない要素**（hint フィールド等）→ 型拡張を提案
-
-3. **ユーザーに報告**: バグ一覧 + 修正方針を提示し承認を得る
-
-4. **Stitch HTML をそのまま最終デザインとして確定**: HTMLモックは参考資料に格下げ
-
----
-
-## Phase 4: Figma 統合
+## Phase 3: Figma 統合（任意）
 
 **目的**: 確定デザインを Figma にキャプチャし、デザインシステムとして保存。
 
@@ -220,16 +184,14 @@ stagger fade-in animations, Material Symbols Outlined icons.
 
 ---
 
-## Phase 5: React 実装
+## Phase 4: React 実装
 
-**目的**: Stitch デザインを React + TypeScript コンポーネントに **忠実に** 変換。
+**目的**: HTMLモックを React + TypeScript コンポーネントに **忠実に** 変換。
 
-### ⚠️ Stitch 忠実実装ルール
+### HTMLモック忠実実装ルール
 
-- Stitch HTML の各画面を **逐次対比** しながら実装する。要素の省略・簡略化は禁止
-- Stitch HTML にある UI 要素が現在のデータ型にない場合 → **型を拡張** して対応（省略するな）
-- テーマカラーのアダプテーション（例: Stitch の emerald → プロジェクトの amber）は OK
-- Stitch HTML にある全要素のチェックリストを作り、実装漏れがないことを確認してからコミット
+- HTMLモックの各セクションを **逐次対比** しながら実装する。要素の省略・簡略化は禁止
+- HTMLモックにある全要素のチェックリストを作り、実装漏れがないことを確認してからコミット
 
 ### 実装計画の立て方
 
@@ -296,14 +258,11 @@ stagger fade-in animations, Material Symbols Outlined icons.
 
 1. **モデル名ハードコード禁止**: Gemini モデル名は `getGeminiFlashModel()` / `getGeminiModel()` で環境変数から取得
 2. **Doppler 必須**: service_role key / access token は `.env` にない。必ず Doppler から取得
-3. **Stitch プロジェクトタイプ**: `TEXT_TO_UI_PRO` 必須（`PROJECT_DESIGN` はエラー）
-4. **Figma capture.js**: HTMLモックの `<head>` に入っていないとキャプチャできない
-5. **フォント制限**: Arial / Inter / Roboto / system fonts 禁止（CLAUDE.md）
-6. **紫グラデ＋白背景禁止**（CLAUDE.md）
-7. **Phase 3 ブラウザ確認必須**: Stitch生成後、Claudeが勝手にデザイン判定してはいけない。必ずユーザーにブラウザで確認してもらい、承認を得ること
-8. **Stitch デザイン全採用**: Claude が「こっちの方がいい」と判断して Stitch の要素を省略・変更することは絶対禁止。修正して良いのはバグ（英語テキスト、ワークフロー不整合）のみ
-9. **Stitch 要素の省略禁止**: Stitch にある UI 要素が現在のデータ型にない場合、型を拡張して対応する。「データがないから省略」は禁止
-10. **Claude はデザインの黒子**: UIデザインで Stitch と対等という意識を持たない。Stitch 先生のデザインを忠実にコード化する実装者に徹する
+3. **Figma capture.js**: HTMLモックの `<head>` に入っていないとキャプチャできない
+4. **フォント制限**: Arial / Inter / Roboto / system fonts 禁止（CLAUDE.md）
+5. **紫グラデ＋白背景禁止**（CLAUDE.md）
+6. **Phase 2 ブラウザ確認必須**: HTMLモック完成後、必ずユーザーにブラウザで確認してもらい、承認を得ること。Claudeが勝手に「OK」と判定してはいけない
+7. **Stitch MCP はLP・Webページに使うな**: デザインクオリティが実用レベルに達していない。アプリUI（小コンポーネント）限定。ユーザーが明示的に指示した場合のみ例外
 
 ---
 
@@ -311,10 +270,9 @@ stagger fade-in animations, Material Symbols Outlined icons.
 
 Phase 完了時に以下が揃っていること:
 
-- [ ] `design-mock-{feature}.html` — 確定デザインのHTMLモック
-- [ ] `stitch-html-screen{N}.html` — Stitch 生成物（参考保存）
-- [ ] `stitch-comparison.html` — 比較ページ
+- [ ] `design-mock-{feature}.html` — 確定デザインのHTMLモック（これがデザイン本体）
+- [ ] ユーザーブラウザ確認済み（githack URL経由）
 - [ ] React コンポーネント `.tsx` — 実装済み・ビルド通過
-- [ ] DB migration `.sql` — Supabase で実行済み
+- [ ] DB migration `.sql` — Supabase で実行済み（該当する場合）
 - [ ] Playwright 通しテスト — コンソールエラー0
 - [ ] メモリ更新 — MEMORY.md に進捗を記録
