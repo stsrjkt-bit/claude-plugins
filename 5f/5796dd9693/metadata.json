@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "5f5796dd9693",
+  "strategy": "manual-commit",
+  "branch": "feat/instagram-nb2-pipeline",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "instagram/skills/instagram/scripts/eyecatch.svg"
+  ],
+  "sessions": [
+    {
+      "metadata": "/5f/5796dd9693/0/metadata.json",
+      "transcript": "/5f/5796dd9693/0/full.jsonl",
+      "context": "/5f/5796dd9693/0/context.md",
+      "content_hash": "/5f/5796dd9693/0/content_hash.txt",
+      "prompt": "/5f/5796dd9693/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 7,
+    "cache_creation_tokens": 14312,
+    "cache_read_tokens": 25003,
+    "output_tokens": 206,
+    "api_call_count": 3
+  }
+}

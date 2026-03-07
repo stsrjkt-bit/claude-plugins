@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.8",
+  "checkpoint_id": "5f5796dd9693",
+  "session_id": "ef04ff5f-9157-4e27-a916-996594e660f5",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-07T04:43:37.134773269Z",
+  "branch": "feat/instagram-nb2-pipeline",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "instagram/skills/instagram/scripts/eyecatch.svg"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "59b8b5a323a4",
+  "token_usage": {
+    "input_tokens": 7,
+    "cache_creation_tokens": 14312,
+    "cache_read_tokens": 25003,
+    "output_tokens": 206,
+    "api_call_count": 3
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-07T04:43:37.065704386Z",
+    "agent_lines": 0,
+    "human_added": 704,
+    "human_modified": 19,
+    "human_removed": 0,
+    "total_committed": 723,
+    "agent_percentage": 0
+  }
+}
