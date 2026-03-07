@@ -121,12 +121,21 @@ import os
 from google import genai
 from google.genai import types
 from PIL import Image as PILImage
+from dotenv import dotenv_values
 
-client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
+env = dotenv_values(os.path.expanduser('~/studygram/.env'))
+api_key = env.get('GEMINI_API_KEY')
+model_name = env.get('GEMINI_IMAGE_MODEL') or env.get('VITE_GEMINI_IMAGE_MODEL')
+if not api_key:
+    raise RuntimeError('GEMINI_API_KEY が ~/studygram/.env に未設定')
+if not model_name:
+    raise RuntimeError('GEMINI_IMAGE_MODEL or VITE_GEMINI_IMAGE_MODEL が ~/studygram/.env に未設定')
+
+client = genai.Client(api_key=api_key)
 image = PILImage.open('<ベース画像パス>')
 
 response = client.models.generate_content(
-    model='gemini-3.1-flash-image-preview',
+    model=model_name,
     contents=[
         'この画像のデザインをブラッシュアップしてください。'
         '文字の内容・配置・フォントサイズは絶対に変えないでください。文字は一文字も変更禁止です。'
@@ -141,14 +150,15 @@ response = client.models.generate_content(
 
 for part in response.parts:
     if part.inline_data is not None:
-        genai_img = part.as_image()
-        genai_img.save('/tmp/nb2_raw.png')
-        pil_img = PILImage.open('/tmp/nb2_raw.png')
-        pil_img = pil_img.resize((1080, 1080), PILImage.LANCZOS)
-        pil_img.save('<出力パス>')
+        img = part.as_image().resize((1080, 1080), PILImage.Resampling.LANCZOS)
+        img.save('<出力パス>')
 ```
 
-**環境変数:** `GEMINI_API_KEY` は `~/studygram/.env` から読み込む。ハードコード禁止。
+**環境変数（`~/studygram/.env`）:**
+- `GEMINI_API_KEY` — API キー（必須）
+- `GEMINI_IMAGE_MODEL` — 画像編集モデル名（必須、例: `gemini-3.1-flash-image-preview`）
+
+モデル名・API キーのハードコード禁止。
 
 ### STEP 7: 最終確認・納品
 1. NB2 出力を tmpfiles.org にアップし、直リンクをユーザーに渡す
@@ -290,8 +300,7 @@ for part in response.parts:
 
 1. `~/.claude/projects/-home-stsrj/memory/instagram-latest.json` を Read して投稿データを読み込む
    - ファイルが存在しない場合はエラー: 「先に /instagram で投稿を生成してください」
-   - `eyecatch.concept` が含まれていなければエラー: 「JSONにeyecatch情報がありません。/instagram を再実行してください」
-2. フルパイプラインの STEP 3 → STEP 7 と同じ手順を実行する
+2. フルパイプラインの STEP 3 → STEP 7 と同じ手順を実行する（STEP 3 でアイキャッチを生成するため事前の eyecatch.concept は不要）
 
 ---
 
@@ -482,5 +491,5 @@ OKなら「納品」、修正があれば指示してください。
 - ImageMagick がインストール済みであること（写真加工で使用）
 - poppler-utils がインストール済みであること（PDF→画像変換で使用）
 - Noto Sans JP variable font がローカルインストール済みであること（weight 900 のレンダリングに必要）
-- google-genai Python パッケージがインストール済みであること（Nano Banana 2 で使用）
-- GEMINI_API_KEY が `~/studygram/.env` に設定されていること
+- google-genai, python-dotenv Python パッケージがインストール済みであること（Nano Banana 2 で使用）
+- `~/studygram/.env` に `GEMINI_API_KEY` と `VITE_GEMINI_IMAGE_MODEL` が設定されていること
