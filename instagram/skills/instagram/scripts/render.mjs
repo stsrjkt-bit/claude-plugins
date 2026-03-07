@@ -57,7 +57,8 @@ async function main() {
 
   // Load template HTML
   const templatePath = join(__dirname, 'template.html');
-  await page.goto(`file://${templatePath}`, { waitUntil: 'load' });
+  await page.goto(`file://${templatePath}`, { waitUntil: 'networkidle0' });
+  await page.evaluate(() => document.fonts.ready);
 
   // Load eyecatch SVG if available
   const eyecatchPath = join(__dirname, 'eyecatch.svg');
