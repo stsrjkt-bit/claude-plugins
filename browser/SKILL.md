@@ -33,33 +33,44 @@ WSL2 環境で Playwright の `chromium.launch()` を使うと、重いサイト
 
 ```bash
 # 既に起動中ならスキップ
-curl -s http://127.0.0.1:9222/json/version > /dev/null 2>&1 && echo "Already running" && exit 0
+if curl -s http://127.0.0.1:9222/json/version > /dev/null 2>&1; then
+  echo "Already running"
+else
+  google-chrome \
+    --headless=new \
+    --no-sandbox \
+    --disable-setuid-sandbox \
+    --disable-dev-shm-usage \
+    --disable-gpu \
+    --no-first-run \
+    --remote-debugging-port=9222 \
+    --remote-allow-origins=* \
+    --user-data-dir="$HOME/.config/chrome-headless" \
+    about:blank > /tmp/chrome-headless.log 2>&1 &
 
-google-chrome \
-  --headless=new \
-  --no-sandbox \
-  --disable-setuid-sandbox \
-  --disable-dev-shm-usage \
-  --disable-gpu \
-  --no-first-run \
-  --remote-debugging-port=9222 \
-  --remote-allow-origins=* \
-  --user-data-dir=/home/yuki/.config/chrome-headless \
-  about:blank > /tmp/chrome-headless.log 2>&1 &
+  echo $! > /tmp/chrome-headless.pid
 
-# 起動待ち（最大10秒）
-for i in $(seq 1 10); do
-  sleep 1
-  curl -s http://127.0.0.1:9222/json/version > /dev/null 2>&1 && echo "Chrome started (port 9222)" && exit 0
-done
-echo "Chrome failed to start. Check /tmp/chrome-headless.log"
-exit 1
+  # 起動待ち（最大10秒）
+  started=false
+  for i in $(seq 1 10); do
+    sleep 1
+    if curl -s http://127.0.0.1:9222/json/version > /dev/null 2>&1; then
+      echo "Chrome started (port 9222, PID=$(cat /tmp/chrome-headless.pid))"
+      started=true
+      break
+    fi
+  done
+  if [ "$started" = false ]; then
+    echo "Chrome failed to start. Check /tmp/chrome-headless.log"
+  fi
+fi
 ```
 
 ### 重要事項
-- `--user-data-dir` は**絶対パス**で指定（`$HOME` 展開失敗のケースあり）
+- `--user-data-dir` は `"$HOME/..."` のようにダブルクォートで囲む（シェルが `$HOME` を正しく展開する）
 - `--headless=new` は Chrome 112+ の新しいヘッドレスモード（旧 `--headless` より互換性が高い）
 - ポートは **9222 固定**（chrome-devtools MCP と共有可能）
+- PID は `/tmp/chrome-headless.pid` に保存される
 
 ## Playwright 接続テンプレート
 
@@ -73,16 +84,17 @@ import { chromium } from 'playwright';
   const context = browser.contexts()[0] || await browser.newContext();
   const page = context.pages()[0] || await context.newPage();
 
-  // --- ここから自由に使う ---
-  await page.goto('https://example.com', { waitUntil: 'domcontentloaded', timeout: 60000 });
-  // スクショ
-  await page.screenshot({ path: '/tmp/screenshot.png' });
-  // ネットワーク傍受
+  // ネットワーク傍受（goto の前に登録しないとリクエストを取りこぼす）
   page.on('response', async resp => {
     if (resp.url().includes('api.example.com')) {
       console.log(resp.url(), resp.status());
     }
   });
+
+  // --- ここから自由に使う ---
+  await page.goto('https://example.com', { waitUntil: 'domcontentloaded', timeout: 60000 });
+  // スクショ
+  await page.screenshot({ path: '/tmp/screenshot.png' });
 
   await browser.close();
 })();
@@ -95,7 +107,14 @@ import { chromium } from 'playwright';
 ## Chrome 停止
 
 ```bash
-pkill -f "chrome.*--remote-debugging-port=9222"
+PID_FILE="/tmp/chrome-headless.pid"
+if [ -f "$PID_FILE" ]; then
+  kill "$(cat "$PID_FILE")" 2>/dev/null && rm -f "$PID_FILE"
+  echo "Chrome stopped."
+else
+  echo "PID file not found. Falling back to pkill."
+  pkill -f "chrome.*--remote-debugging-port=9222" 2>/dev/null
+fi
 ```
 
 ## よくあるトラブル
