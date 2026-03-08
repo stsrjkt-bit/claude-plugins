@@ -207,13 +207,13 @@ PYEOF
 
 ```bash
 GIST_URL=$(gh gist create --public test-report-*.html --desc "Test Report: {テスト対象}" 2>&1)
-GIST_ID=$(echo "$GIST_URL" | grep -oP '[a-f0-9]{32}')
+GIST_ID=$(echo "$GIST_URL" | awk -F/ '{print $NF}')
 ```
 
 ### githack.com URL 生成
 
 ```
-https://gist.githack.com/stsrjkt-bit/{GIST_ID}/raw/{filename}
+https://gist.githack.com/{GitHubユーザー名}/{GIST_ID}/raw/{filename}
 ```
 
 ### ユーザーへ報告
