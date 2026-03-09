@@ -3,7 +3,7 @@ name: atama-sync
 description: atama+ COACH → StudyTracker スタンプ同期。「スタンプ押して」で手動実行。
 args:
   - name: command
-    description: "'run' で全生徒同期実行、'status' で状態確認、引数なしで概要表示"
+    description: "'run' で全生徒同期実行、引数なしで概要表示"
 ---
 
 # /atama-sync — atama+ スタンプ同期
@@ -21,8 +21,7 @@ StudyTracker の `atama_unit_stamps` テーブルに記録する。
 ## 引数判定
 
 - **引数なし** → この SKILL.md の概要を表示
-- **`run`** → 全生徒の同期を実行（メール送信あり）
-- **`status`** → 最終実行結果のサマリーを表示
+- **`run`** → 全生徒の同期を実行（下記「run 実行手順」に従う）
 
 ## アーキテクチャ
 
@@ -34,8 +33,8 @@ StudyTracker の `atama_unit_stamps` テーブルに記録する。
                                               │ subject_key でフィルタ
                                               ▼
                                        ┌──────────────┐
-                                       │ atama_unit_   │
-                                       │ stamps UPSERT │
+                                       │ UPSERT into   │
+                                       │ unit_stamps   │
                                        └──────┬───────┘
                                               │
                                               ▼
@@ -99,7 +98,6 @@ Headers:
   （+ client, device-info, Referer）
 ```
 
-- ORG_ID: 5566
 - subject_group ID = DB の `subject_key`（完全一致）
 
 ## ファイル構成
@@ -107,7 +105,6 @@ Headers:
 | ファイル | 役割 |
 |---------|------|
 | `studygram/scripts/all-students-sync.mjs` | 全生徒同期スクリプト（メイン） |
-| `studygram/scripts/anzu-daily-sync.mjs` | 杏さん専用（初期PoC、3科目のみ） |
 | `studygram/scripts/verify-enrolled-subjects.mjs` | 各生徒の教科データ確認ツール |
 
 ## 環境変数（全て Doppler `sato-juku/dev_studygram`）
@@ -119,9 +116,16 @@ Headers:
 | `SUPABASE_ACCESS_TOKEN` | DB操作（Management API） |
 | `RESEND_API_KEY` | メール送信 |
 
-## 手動実行（`run`）
+## run 実行手順
+
+`/atama-sync run` が呼ばれたら、Claude は以下を順に実行する:
+
+1. **環境変数セット**: studygram ディレクトリで `.env` を読み込み、Doppler からシークレットを取得
+2. **スクリプト実行**: `node scripts/all-students-sync.mjs` を実行（約6分）
+3. **結果報告**: スクリプト出力の要約をユーザーに報告（メールは自動送信される）
 
 ```bash
+cd ~/studygram
 source .env && export ATAMA_ID ATAMA_PW
 export SUPABASE_ACCESS_TOKEN=$(doppler secrets get SUPABASE_ACCESS_TOKEN --project sato-juku --config dev_studygram --plain)
 export RESEND_API_KEY=$(doppler secrets get RESEND_API_KEY --project sato-juku --config dev_studygram --plain)
