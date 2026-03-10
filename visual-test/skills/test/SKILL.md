@@ -257,7 +257,8 @@ google-chrome --headless=new --no-sandbox --disable-setuid-sandbox \
   --remote-debugging-port=9333 --remote-allow-origins=* \
   --user-data-dir=/home/yuki/.config/chrome-studygram-test \
   --window-size=390,844 --disable-popup-blocking \
-  --noerrdialogs --ozone-platform=headless about:blank &
+  --noerrdialogs --ozone-platform=headless \
+  --use-angle=swiftshader-webgl about:blank &
 
 # 2. Chrome DevTools MCP で navigate / evaluate / screenshot
 ```
