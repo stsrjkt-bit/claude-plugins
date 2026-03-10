@@ -60,8 +60,9 @@ npx playwright test e2e/ --project=webkit
 
 | パターン | 問題 | 修正方法 |
 |----------|------|----------|
-| `async` コールバック内の `window.open()` | ポップアップブロッカーにブロックされる | 同期的に `window.open('about:blank')` → await後に `location.href` 差し替え |
-| `blob:` URLを `window.open` | 共有シートが制限される | presigned HTTPS URLを使う |
+| `async` コールバック内の `window.open()` | ポップアップブロッカーにブロックされる | 同期的に `window.open('')` → await後に `location.href` 差し替え |
+| `blob:` URLを `window.open` | iOS 13-14でBlobメモリ分断→白画面 | Web Share API (iOS 15+) + Base64 Data URI (iOS 13-14) の2段構え |
+| `await` 後に `window.open` へフォールバック | `navigator.share()` 失敗後の `window.open` はユーザージェスチャーコンテキスト消失でブロック | `canShare` がtrueなら常にreturn、Base64フォールバックに落ちないようにする |
 | React `onTouchStart` / `onTouchMove` で `e.preventDefault()` | React synthetic eventsはpassiveリスナー。preventDefaultが無効 | `useEffect` + `addEventListener({ passive: false })` でDOM直接登録 |
 | `e.touches[0]` にガード無し | multi-touch等でundefinedになりランタイムエラー | `if (!touch) return;` を追加 |
 | `position: fixed` + `overflow: auto` | iOS Safariでスクロールが効かない | `-webkit-overflow-scrolling: touch` を追加 |
@@ -131,12 +132,16 @@ target.dispatchEvent(evt);
 - `window.open()` は同期的なユーザージェスチャーコンテキスト内でのみ許可
 - `async/await` を挟むとコンテキストが切れてブロックされる
 - `blob:` URLの共有シートは制限される（プリンターアプリが表示されない等）
+- iOS 13-14: `blob:` URL を `window.open` で開くと、別タブからは blob メモリにアクセスできず白画面になる
+- 推奨パターン: Web Share API (iOS 15+) + Base64 Data URI (iOS 13-14) の2段構え
+- `navigator.share()` 失敗後の `window.open` フォールバックはユーザージェスチャー消失でブロックされるため、`canShare` が true なら常に return
 
 ### タッチイベント・Canvas
 - React synthetic touch events (`onTouchStart` 等) は **passive** リスナー。`preventDefault()` が無効
 - Canvas描画にはDOM直接 `addEventListener('touchstart', fn, { passive: false })` が必要
 - `touch-action: none` CSS だけでは不十分なケースがある（モーダル内バウンス等）
 - `e.touches[0]` は常に存在が保証されないため guard clause 必須
+- Canvas メモリ制限: iOS Safari は Canvas のピクセル数に上限あり（16MP）。大きな PDF ページのレンダリングで `dpr` を掛けすぎるとクラッシュ → `Math.min(dpr, 2)` でキャップ
 
 ### レイアウト・スクロール
 - `100vh` がアドレスバーを含むため実際の表示領域と一致しない
@@ -146,12 +151,18 @@ target.dispatchEvent(evt);
 ### フォーム・入力
 - `<input type="date">` のUIが独自
 - `autofocus` が効かない（ユーザージェスチャー必須）
-- 仮想キーボード表示時のビューポートリサイズ挙動が異なる
+- 仮想キーボード表示時の `visualViewport` リサイズが `window.innerHeight` と異なる挙動になる
+- `visualViewport` API でキーボード高さを検出する必要がある（iOS 13+対応）
 
 ### メディア・ファイル
 - `<video>` の自動再生にはmutedが必須
 - Web Audio APIの再生開始にはユーザージェスチャーが必須
 - PDF表示がiOS独自ビューアになる
+- `FileReader.readAsDataURL()` は大きなファイル（10MB超）でメモリ圧迫→iOS低メモリ端末でクラッシュの可能性
+
+### ナビゲーション・キャッシュ
+- bfcache（Back/Forward Cache）: `pageshow` イベントの `event.persisted` を確認し、キャッシュ復帰時にステート再初期化が必要
+- Safari は他ブラウザより積極的に bfcache を使うため、SPA でも `pagehide`/`pageshow` を監視すべき
 
 ## Playwright WebKit の制約
 
