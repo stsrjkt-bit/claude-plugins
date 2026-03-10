@@ -182,3 +182,50 @@ iOS Safariと同一エンジンだが、以下は再現しない:
 
 **つまり**: エンジンレベルのバグ（CSS、JS API）は検出できるが、
 OS統合レベルの問題は検出できない。後者は実機テストが必要。
+
+## 実アプリでの iOS 互換性テスト（Chrome DevTools MCP）
+
+Playwright WebKit の `e2e/*.spec.ts` はエンジンレベルの検証用。
+実アプリ（Supabase認証付き）のE2Eテストでは **Chrome headless + Chrome DevTools MCP** を使う。
+
+### なぜ Playwright MCP ではダメか
+
+Playwright MCP の内蔵 Chromium は Supabase JS クライアントと相性が悪く、
+`AbortError: signal is aborted without reason` でログインが必ず失敗する。
+
+### Chrome headless 起動（ポップアップテスト対応）
+
+```bash
+google-chrome --headless=new --no-sandbox --disable-setuid-sandbox \
+  --disable-dev-shm-usage --disable-gpu --no-first-run \
+  --remote-debugging-port=9333 --remote-allow-origins=* \
+  --user-data-dir=/home/yuki/.config/chrome-studygram-test \
+  --window-size=390,844 --disable-popup-blocking \
+  --noerrdialogs --ozone-platform=headless about:blank &
+```
+
+**重要フラグ:**
+- `--disable-popup-blocking` — `window.open` のテストに必須
+- `--window-size=390,844` — iPhone 14 相当のビューポート
+
+### DevTools evaluate の注意
+
+`const` / `let` がページコンテキストに残るため、2回目の evaluate で
+`Identifier has already been declared` エラーが出る。IIFE でスコープを分離:
+
+```javascript
+void((() => {
+  const btn = document.querySelector('button[title="印刷"]');
+  btn?.click();
+  return 'clicked';
+})());
+```
+
+### 重い Canvas ページでスクショがタイムアウト
+
+PDF.js 等で Canvas を大量レンダリング中は `Page.captureScreenshot` がタイムアウトする。
+スクショ不可時は `evaluate` で DOM 情報（canvasCount, scrollHeight 等）を記録して代替する。
+
+### テストアカウント
+
+**テストには必ず管理者アカウントを使う。生徒のアカウントは絶対に使うな。**

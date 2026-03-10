@@ -236,6 +236,54 @@ https://gist.githack.com/{GitHubユーザー名}/{GIST_ID}/raw/{filename}
 ## 注意事項
 
 - **認証が必要な場合**: テスト用アカウントでログイン状態を作ってからテスト開始
+- **テストには必ず管理者アカウントを使う。生徒のアカウントは絶対に使うな**
 - **破壊的操作**: 本番データに影響する操作（削除等）は実行前に確認
 - **タイムアウト**: Playwright MCP の操作は各 30 秒以内。長い場合は waitFor を使う
 - **既存の test-*.png**: テスト実行前に古い test-*.png を削除しない（別テストのものかもしれない）
+
+---
+
+## Chrome DevTools MCP でのテスト（Supabase アプリ向け）
+
+Playwright MCP の内蔵 Chromium は Supabase JS クライアントと相性が悪い
+（`AbortError: signal is aborted without reason` でログインが必ず失敗する）。
+
+Supabase 認証を伴うテストでは **Chrome headless + Chrome DevTools MCP** を使う:
+
+```bash
+# 1. Chrome headless 起動（ポップアップブロック解除付き）
+google-chrome --headless=new --no-sandbox --disable-setuid-sandbox \
+  --disable-dev-shm-usage --disable-gpu --no-first-run \
+  --remote-debugging-port=9333 --remote-allow-origins=* \
+  --user-data-dir=/home/yuki/.config/chrome-studygram-test \
+  --window-size=390,844 --disable-popup-blocking \
+  --noerrdialogs --ozone-platform=headless about:blank &
+
+# 2. Chrome DevTools MCP で navigate / evaluate / screenshot
+```
+
+### evaluate での変数再宣言エラー回避
+
+DevTools MCP の `evaluate` は同一ページコンテキストで実行されるため、
+`const` / `let` で宣言した変数が2回目以降 `Identifier has already been declared` エラーになる。
+
+**対策**: IIFE か `void()` でスコープを分離する:
+
+```javascript
+// NG: 2回目でエラー
+const btn = document.querySelector('button');
+
+// OK: スコープ分離
+void((() => {
+  const btn = document.querySelector('button');
+  btn?.click();
+  return 'clicked';
+})());
+```
+
+### 重い Canvas ページでスクショがタイムアウトする
+
+PDF.js 等で Canvas を大量レンダリングしているページでは
+`Page.captureScreenshot` がタイムアウトすることがある。
+
+**対策**: スクショが撮れない場合は `evaluate` で DOM 情報を取得して記録に代える。
