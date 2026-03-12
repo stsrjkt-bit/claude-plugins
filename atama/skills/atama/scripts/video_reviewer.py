@@ -39,9 +39,23 @@ def review_video(video_path: str, scene_spec: str) -> dict:
 
     client = genai.Client(api_key=api_key)
 
+    # 日本語ファイル名は Gemini API (httpx) の ASCII ヘッダで UnicodeEncodeError になる
+    # → 一時的に ASCII ファイル名でコピーしてアップロード
+    import shutil
+    import tempfile
+
+    upload_path = video_path
+    tmp_copy = None
+    try:
+        video_path.encode("ascii")
+    except UnicodeEncodeError:
+        tmp_copy = os.path.join(tempfile.gettempdir(), "hoshu_video_review.mp4")
+        shutil.copy2(video_path, tmp_copy)
+        upload_path = tmp_copy
+
     # 動画アップロード
     print(f"動画アップロード中: {video_path}")
-    video_file = client.files.upload(file=video_path)
+    video_file = client.files.upload(file=upload_path)
     print(f"  アップロード完了: {video_file.name} ({video_file.state})")
 
     while video_file.state == "PROCESSING":
@@ -100,6 +114,10 @@ JSON以外のテキストは一切出力しないこと。
         raw = raw.split("```json", 1)[1].split("```", 1)[0]
     elif "```" in raw:
         raw = raw.split("```", 1)[1].split("```", 1)[0]
+
+    # 一時コピーを削除
+    if tmp_copy and os.path.exists(tmp_copy):
+        os.remove(tmp_copy)
 
     try:
         return json.loads(raw)
