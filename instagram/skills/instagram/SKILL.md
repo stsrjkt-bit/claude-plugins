@@ -72,14 +72,14 @@ curl -s -F "file=@<画像パス>" https://tmpfiles.org/api/v1/upload
 ### STEP 0: Tailscale SSH事前認証
 納品時のSCP転送でタイムアウトしないよう、パイプライン冒頭でSurface接続を確認する。
 
-1. `ssh -o ConnectTimeout=5 stsrj@surface "echo OK" 2>&1` を実行する
+1. `ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new stsrj@surface "echo OK" 2>&1` を実行する
 2. `OK` が返れば認証済み → そのまま STEP 1 へ
 3. 認証URLが出力されたら、URLを抽出してユーザーに提示する:
    ```
    🔗 Tailscale SSH認証が必要です。ブラウザで開いてください:
    https://login.tailscale.com/a/xxxxx
    ```
-   AskUserQuestion で「認証した」を待ち、再度 `ssh ... "echo OK"` で確認してから STEP 1 へ
+   AskUserQuestion で「認証した」を待ち、再度 `ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new stsrj@surface "echo OK" 2>&1` で確認してから STEP 1 へ
 4. タイムアウト（Surfaceオフライン）→ ユーザーに報告し、納品はローカルのみになる旨を伝えて STEP 1 へ
 
 ### STEP 1: リサーチ確認
