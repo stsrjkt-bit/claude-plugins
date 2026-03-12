@@ -122,15 +122,14 @@ bash ~/.claude/skills/atama/scripts/launch-chrome.sh
 ```
 
 - 既に起動中（`pgrep -f "chrome.*--remote-debugging-port=9222"`）ならスキップ
-- `--remote-debugging-port=9222` で chrome-devtools MCP 接続
+- `--remote-debugging-port=9222` でセッション永続化用 Chrome を起動（Playwright MCP が操作する）
 - `--user-data-dir=~/.config/chrome-atama` でセッション永続化
 - 起動後5秒待機
 
 #### 1b. ログイン
 
-1. `list_pages` でページ一覧を取得
-2. atama+ COACH のページがあれば `select_page`。なければ `navigate_page` で `https://coach.atama.plus/` に遷移
-3. `take_screenshot` でページ状態を確認
+1. `browser_navigate` で `https://coach.atama.plus/` に遷移
+2. `browser_take_screenshot` でページ状態を確認
 
 **URL判定:**
 - `/user/home` → ログイン済み。Phase 2 へ
@@ -141,7 +140,7 @@ source ~/.env.atama && echo "ID=$ATAMA_ID PW_LEN=${#ATAMA_PW}"
 ```
 `.env.atama` が存在しない場合はユーザーに手動入力を依頼。
 
-Bash で認証情報を読み取り、JS 文字列を構築して `evaluate_script` に渡す（`${ATAMA_ID}` と `${ATAMA_PW}` は bash の source で取得した値を JS 文字列内に展開する）:
+Bash で認証情報を読み取り、JS 文字列を構築して `browser_evaluate` に渡す（`${ATAMA_ID}` と `${ATAMA_PW}` は bash の source で取得した値を JS 文字列内に展開する）:
 ```javascript
 () => {
   const inputs = document.querySelectorAll('input');
@@ -161,12 +160,12 @@ Bash で認証情報を読み取り、JS 文字列を構築して `evaluate_scri
 }
 ```
 
-`take_snapshot` → ログインボタンの uid で `click(uid)`。20秒待つ。`take_screenshot` で確認。
+`browser_snapshot` → ログインボタンの ref で `browser_click`。20秒待つ。`browser_take_screenshot` で確認。
 
 **`/atama login` の場合はここで終了。**
 
 ### 成功条件
-- [ ] `curl -s http://localhost:9222/json` が応答する
+- [ ] ブラウザが操作可能（`browser_snapshot` が応答する）
 - [ ] URL が `/user/home` を含む
 - → Phase 2 へ
 
@@ -618,14 +617,14 @@ python3 ~/.claude/skills/atama/scripts/upload_hoshu.py \
 ### クリック方法の使い分け
 | 操作 | 方法 | 理由 |
 |------|------|------|
-| タブ切替（全員、単元進捗など） | `evaluate_script` で `el.click()` | 同一ページ内の切替は JS クリックで動く |
-| 教科選択メニューの項目選択 | `take_snapshot` → `click(uid)` | uid クリック推奨 |
-| **生徒行のクリック（ページ遷移）** | **`take_snapshot` → `click(uid)`** | **Angular ルーター遷移は実マウスイベントが必要** |
-| 教科セレクタボタンを開く | `take_snapshot` → `click(uid)` | ボタン要素は uid クリックが確実 |
-| 学習履歴サブタブ切替 | `take_snapshot` → `click(uid)` | 「学習タイムライン」「単元ごとの学習状況」の切替 |
-| 単元の展開行（詳細表示） | `take_snapshot` → `click(uid)` | 単元行クリックで詳細行が展開される |
-| 詳細行のクリック（モーダル表示） | `take_snapshot` → `click(uid)` | 演習/講義の詳細行→問題リストモーダル |
-| モーダルの「閉じる」ボタン | `take_snapshot` → `click(uid)` または `evaluate_script` | uid 無効時は JS フォールバック |
+| タブ切替（全員、単元進捗など） | `browser_evaluate` で `el.click()` | 同一ページ内の切替は JS クリックで動く |
+| 教科選択メニューの項目選択 | `browser_snapshot` → `browser_click(ref)` | ref クリック推奨 |
+| **生徒行のクリック（ページ遷移）** | **`browser_snapshot` → `browser_click(ref)`** | **Angular ルーター遷移は実マウスイベントが必要** |
+| 教科セレクタボタンを開く | `browser_snapshot` → `browser_click(ref)` | ボタン要素は ref クリックが確実 |
+| 学習履歴サブタブ切替 | `browser_snapshot` → `browser_click(ref)` | 「学習タイムライン」「単元ごとの学習状況」の切替 |
+| 単元の展開行（詳細表示） | `browser_snapshot` → `browser_click(ref)` | 単元行クリックで詳細行が展開される |
+| 詳細行のクリック（モーダル表示） | `browser_snapshot` → `browser_click(ref)` | 演習/講義の詳細行→問題リストモーダル |
+| モーダルの「閉じる」ボタン | `browser_snapshot` → `browser_click(ref)` または `browser_evaluate` | ref 無効時は JS フォールバック |
 
 ### 教科切替の手順
 1. 教科セレクタボタンの uid を `take_snapshot` で取得し、`click(uid)` で開く
@@ -635,10 +634,10 @@ python3 ~/.claude/skills/atama/scripts/upload_hoshu.py \
 ### データ取得方法
 | 目的 | 方法 |
 |------|------|
-| 画面の視覚確認 | `take_screenshot` |
-| テキストデータ一括取得 | `take_snapshot(filePath=...)` → `Grep` で検索 |
-| API レスポンス取得 | `list_network_requests` → `get_network_request(reqid)` |
-| DOM 直接検索 | `evaluate_script` |
+| 画面の視覚確認 | `browser_take_screenshot` |
+| テキストデータ一括取得 | `browser_snapshot` → `Grep` で検索 |
+| API レスポンス取得 | `browser_network_requests` |
+| DOM 直接検索 | `browser_evaluate` |
 
 ### つまずき検出方法
 - snapshot 内で `StaticText "つまずき"` を探す

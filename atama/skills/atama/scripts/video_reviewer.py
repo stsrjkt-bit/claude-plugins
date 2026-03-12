@@ -4,7 +4,9 @@
 import argparse
 import json
 import os
+import shutil
 import sys
+import tempfile
 import time
 
 from google import genai
@@ -41,32 +43,30 @@ def review_video(video_path: str, scene_spec: str) -> dict:
 
     # 日本語ファイル名は Gemini API (httpx) の ASCII ヘッダで UnicodeEncodeError になる
     # → 一時的に ASCII ファイル名でコピーしてアップロード
-    import shutil
-    import tempfile
-
     upload_path = video_path
     tmp_copy = None
     try:
         video_path.encode("ascii")
     except UnicodeEncodeError:
-        tmp_copy = os.path.join(tempfile.gettempdir(), "hoshu_video_review.mp4")
+        tmp_copy = os.path.join(tempfile.gettempdir(), f"hoshu_video_review_{os.getpid()}.mp4")
         shutil.copy2(video_path, tmp_copy)
         upload_path = tmp_copy
 
-    # 動画アップロード
-    print(f"動画アップロード中: {video_path}")
-    video_file = client.files.upload(file=upload_path)
-    print(f"  アップロード完了: {video_file.name} ({video_file.state})")
+    try:
+        # 動画アップロード
+        print(f"動画アップロード中: {video_path}")
+        video_file = client.files.upload(file=upload_path)
+        print(f"  アップロード完了: {video_file.name} ({video_file.state})")
 
-    while video_file.state == "PROCESSING":
-        print("  処理中...")
-        time.sleep(10)
-        video_file = client.files.get(name=video_file.name)
+        while video_file.state == "PROCESSING":
+            print("  処理中...")
+            time.sleep(10)
+            video_file = client.files.get(name=video_file.name)
 
-    if video_file.state != "ACTIVE":
-        raise RuntimeError(f"動画の処理に失敗 (state={video_file.state})")
+        if video_file.state != "ACTIVE":
+            raise RuntimeError(f"動画の処理に失敗 (state={video_file.state})")
 
-    prompt = f"""あなたは教育動画のQAレビュアーです。添付の動画を厳しくレビューしてください。
+        prompt = f"""あなたは教育動画のQAレビュアーです。添付の動画を厳しくレビューしてください。
 
 以下に各シーンで**画面上に表示されるべき内容**を記載します。
 動画を最初から最後まで注意深く視聴し、**実際の画面がこの仕様と合っているか**を1シーンずつ検証してください。
@@ -102,29 +102,28 @@ def review_video(video_path: str, scene_spec: str) -> dict:
 JSON以外のテキストは一切出力しないこと。
 """
 
-    print(f"Gemini レビュー中... (model: {flash_model})")
-    response = client.models.generate_content(
-        model=flash_model,
-        contents=[video_file, prompt],
-        config={"temperature": 0.3},
-    )
+        print(f"Gemini レビュー中... (model: {flash_model})")
+        response = client.models.generate_content(
+            model=flash_model,
+            contents=[video_file, prompt],
+            config={"temperature": 0.3},
+        )
 
-    raw = response.text
-    if "```json" in raw:
-        raw = raw.split("```json", 1)[1].split("```", 1)[0]
-    elif "```" in raw:
-        raw = raw.split("```", 1)[1].split("```", 1)[0]
+        raw = response.text
+        if "```json" in raw:
+            raw = raw.split("```json", 1)[1].split("```", 1)[0]
+        elif "```" in raw:
+            raw = raw.split("```", 1)[1].split("```", 1)[0]
 
-    # 一時コピーを削除
-    if tmp_copy and os.path.exists(tmp_copy):
-        os.remove(tmp_copy)
-
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError as e:
-        print(f"WARNING: Gemini JSON パース失敗: {e}", file=sys.stderr)
-        print(f"  Raw output: {response.text[:300]}", file=sys.stderr)
-        return {"issues": [], "overall_assessment": f"[JSONパース失敗] {response.text[:500]}"}
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError as e:
+            print(f"WARNING: Gemini JSON パース失敗: {e}", file=sys.stderr)
+            print(f"  Raw output: {response.text[:300]}", file=sys.stderr)
+            return {"issues": [], "overall_assessment": f"[JSONパース失敗] {response.text[:500]}"}
+    finally:
+        if tmp_copy and os.path.exists(tmp_copy):
+            os.remove(tmp_copy)
 
 
 def print_review(review: dict):
