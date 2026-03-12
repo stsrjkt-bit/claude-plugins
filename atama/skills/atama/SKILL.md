@@ -467,9 +467,25 @@ cd ~/.claude/skills/atama/scripts && node generate-pdf.mjs /tmp/hoshu_material/{
 - Phase 3 のレポート + 図形画像
 
 ### 前提条件
-- ローカルに `manim` v0.20.1, `manim-voiceover`, `sox` がインストール済み
 - `~/studygram/.env` に `GEMINI_API_KEY` と `GEMINI_TTS_MODEL` が設定済み
 - TTS ラッパー: `~/.claude/skills/atama/scripts/gemini_tts_service.py`
+- Modal CLI がインストール済み（`modal` コマンドが使える）
+- 初回デプロイ: `modal deploy ~/.claude/skills/atama/scripts/modal_manim_app.py`
+
+### レンダリングバックエンド
+
+環境変数 `ATAMA_RENDER_BACKEND` で切り替え（デフォルト: `modal`）:
+
+| 値 | 動作 |
+|------|------|
+| `modal` | Modal で実行（デフォルト） |
+| `local` | ローカル manim render（従来動作。manim + sox がローカルに必要） |
+| `auto` | Modal 失敗時にローカルへ自動フォールバック |
+
+**例外分類（`auto` モード時）:**
+- Modal API 接続失敗 / タイムアウト → フォールバック対象
+- 音声ファイル不足 (RuntimeError: "音声ファイルが見つかりません") → **即 fail**（フォールバックしても直らない）
+- manim 実行失敗 → スクリプト修正して再試行
 
 ### 処理
 
@@ -507,7 +523,10 @@ cd ~/.claude/skills/atama/scripts && node generate-pdf.mjs /tmp/hoshu_material/{
 }
 ```
 
-#### 5b. JSON → Manim スクリプト変換
+#### 5b. JSON → Manim スクリプト変換 + ナレーション一覧抽出
+
+スクリプト生成と同時に、**全ナレーションテキストのリスト `narrations`** も出力すること。
+（静的 regex 抽出は f-string/変数展開でズレるため、生成時に一覧を出す。）
 
 ```python
 import os, sys
@@ -525,6 +544,15 @@ class HoshuVideo(VoiceoverScene):
         self.scene_summary()
 ```
 
+**`narrations` リスト（別途出力）:**
+```python
+narrations = [
+    "こんにちは、あいりさん。今日は扇形の面積を一緒にやっていきましょう。",
+    "まず、円の面積の公式を思い出してみましょう。...",
+    # ... 全シーンのナレーション
+]
+```
+
 **日本語テキスト注意:**
 - `Text()` には `font="Noto Sans CJK JP"` を指定
 - `MathTex()` の `\text{}` 内に日本語を入れない。`Text` + `MathTex` を `VGroup().arrange(RIGHT)` で横並び
@@ -535,18 +563,44 @@ class HoshuVideo(VoiceoverScene):
 3. 句読点で間をコントロール
 4. 変数はカタカナ（x→エックス）
 
-#### 5c. ローカルレンダリング
+#### 5c. TTS 事前生成（ローカル）
 
-```bash
-cd /tmp/hoshu_material && manim render -qm --format mp4 {単元名}_video.py HoshuVideo
+全ナレーションの WAV をローカルで事前生成する。Gemini TTS API を使用。
+
+```python
+import os, sys
+sys.path.insert(0, os.path.expanduser('~/.claude/skills/atama/scripts'))
+from gemini_tts_service import GeminiTTSService
+
+tts = GeminiTTSService(voice_name="Puck")  # voice は 5a の JSON から取得
+voice_files = tts.pre_generate_all(narrations)
+# voice_files: dict[str, bytes] = {cache_key: wav_bytes, ...}
 ```
 
-#### 5d. 動画圧縮
+**注意:** Modal に Gemini API キーは渡さない。TTS はこのステップでローカル完結。
 
+#### 5d. レンダリング（Modal or ローカル）
+
+**Modal モード（デフォルト）:**
+```python
+import modal
+render_fn = modal.Function.from_name("manim-render", "render_video")
+mp4_bytes = render_fn.remote(script_content, voice_files)
+
+# MP4 をローカルに保存
+with open("/tmp/hoshu_material/{単元名}_video_final.mp4", "wb") as f:
+    f.write(mp4_bytes)
+```
+
+Modal 側で manim render + ffmpeg 圧縮（crf=28, preset fast, movflags +faststart）が実行される。
+返却される MP4 は圧縮済みなので 5d の手動 ffmpeg は不要。
+
+**ローカルモード（フォールバック）:**
 ```bash
+cd /tmp/hoshu_material && manim render -qm --format mp4 {単元名}_video.py HoshuVideo
 ffmpeg -i /tmp/hoshu_material/{単元名}_video.mp4 \
   -vcodec libx264 -crf 28 -preset fast \
-  -acodec aac -b:a 96k \
+  -movflags +faststart -acodec aac -b:a 96k \
   /tmp/hoshu_material/{単元名}_video_final.mp4 -y
 ```
 
@@ -559,7 +613,7 @@ ffmpeg -i /tmp/hoshu_material/{単元名}_video.mp4 \
      /tmp/hoshu_material/{単元名}_video_final.mp4 \
      /tmp/hoshu_material/scene_spec.txt
    ```
-3. HIGH issue → Manim 修正 → 再レンダリング → 再レビュー
+3. HIGH issue → Manim 修正 → 5c から再実行（TTS キャッシュが効くので WAV 再生成は不要）
 4. MEDIUM 以下 / issues なし → PASS
 
 ### 出力

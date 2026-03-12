@@ -122,15 +122,17 @@ Headers:
 
 1. **環境変数セット**: studygram ディレクトリで `.env` を読み込み、Doppler からシークレットを取得
 2. **スクリプト実行**: `node scripts/all-students-sync.mjs` を実行（約6分）
-3. **結果報告**: スクリプト出力の要約をユーザーに報告（メールは自動送信される）
+3. **結果報告**: スクリプト出力の要約をユーザーに報告
 
 ```bash
 cd ~/studygram
 source .env && export ATAMA_ID ATAMA_PW
 export SUPABASE_ACCESS_TOKEN=$(doppler secrets get SUPABASE_ACCESS_TOKEN --project sato-juku --config dev_studygram --plain)
-export RESEND_API_KEY=$(doppler secrets get RESEND_API_KEY --project sato-juku --config dev_studygram --plain)
+export SKIP_EMAIL=1
 node scripts/all-students-sync.mjs
 ```
+
+※ メールを送りたい場合は `SKIP_EMAIL` を外して `RESEND_API_KEY` を設定する
 
 実行時間: 約6分（12生徒 × 23科目 = 276 API呼び出し）
 
