@@ -46,7 +46,7 @@ arguments:
 - 画像納品先（Surface）: `scp` で Surface に転送する
   - `scp <ファイル> stsrj@surface:"/mnt/c/Users/stsrj/Desktop/Instagram投稿/"`
   - ファイル名はシンプルに `YYYY-MM-DD.png` と `YYYY-MM-DD.md`（キャプション）
-  - Tailscale SSH認証を求められたらURLをユーザーに提示して待つ
+  - Tailscale SSH認証はパイプライン冒頭（STEP 0）で事前確認する
 
 ## プレビュー方式（全ステップ共通）
 
@@ -68,6 +68,19 @@ curl -s -F "file=@<画像パス>" https://tmpfiles.org/api/v1/upload
 # フルパイプライン: `/instagram <今日やったこと>`
 
 ## 手順
+
+### STEP 0: Tailscale SSH事前認証
+納品時のSCP転送でタイムアウトしないよう、パイプライン冒頭でSurface接続を確認する。
+
+1. `ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new stsrj@surface "echo OK" 2>&1` を実行する
+2. `OK` が返れば認証済み → そのまま STEP 1 へ
+3. 認証URLが出力されたら、URLを抽出してユーザーに提示する:
+   ```
+   🔗 Tailscale SSH認証が必要です。ブラウザで開いてください:
+   https://login.tailscale.com/a/xxxxx
+   ```
+   AskUserQuestion で「認証した」を待ち、再度 `ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new stsrj@surface "echo OK" 2>&1` で確認してから STEP 1 へ
+4. タイムアウト（Surfaceオフライン）→ ユーザーに報告し、納品はローカルのみになる旨を伝えて STEP 1 へ
 
 ### STEP 1: リサーチ確認
 1. 現在の月を確認する
