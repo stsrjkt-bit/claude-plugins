@@ -110,14 +110,49 @@ AskUserQuestion で「atama+ のスクショも撮りますか？」と確認す
 1. 投稿内容と月の雰囲気から、アイキャッチSVGのコンセプトを3案考える（「アイキャッチ提案仕様」参照）
 2. 3案を画面に表示し、AskUserQuestion で選択を求める
 3. 選択されたコンセプトを元に、`reference.md` から月別カラーを取得する
-4. Opus が直接 SVG コードを書き、`~/.claude/skills/instagram/scripts/eyecatch.svg` に Write で保存する
+4. 以下の 3-A → 3-B の手順で SVG を生成する
 5. instagram-latest.json の `eyecatch.concept` を更新する
 
-SVG仕様:
+#### Step 3-A: 仕様書を作成する（Opusが担当）
+コンセプトの説明文を元に、Sonnetへ渡す厳密な仕様書を作成する。
+仕様書には以下を含める:
+- 各要素の具体的な形状（circle, rect, path, polygon 等）
+- 各要素の座標・サイズ
+- 各要素の色（月別カラーパレットを使用）
+
+仕様書テンプレート:
+
+```
+以下の仕様に従ってSVGを1つ作成せよ。仕様に忠実に、余計な要素は加えないこと。
+
+## サイズ・形
 - viewBox: 0 0 150 150
-- 背景: 透過
-- カラーは月別パレット（accentColor, highlightBg）を使用
-- テキスト不可、filter/グラデーション不使用（フラットデザイン）
+- 背景: 透過（円枠・背景塗りなし）
+
+## メインイラスト
+{ここにOpusがコンセプトを元に各要素の形状・座標・色を具体的に記述する}
+
+## カラーパレット
+- メイン: {accentColor}（reference.md の月別テンプレートから取得）
+- サブ: {highlightBg}
+- ダーク: #4a4a4a
+- ベース: #fefcf7
+
+## 禁止事項
+- テキスト一切不可
+- 指定外の装飾要素不可（星、光線、チェックマーク等を勝手に加えない）
+- filter / グラデーション不使用（フラットデザイン）
+
+SVGコードのみを ```svg ``` で囲んで出力せよ。
+```
+
+#### Step 3-B: Agent tool（model: sonnet）でSVGを生成する
+Agent tool を以下の設定で呼び出す:
+- **subagent_type**: "general-purpose"
+- **model**: "sonnet"
+- **prompt**: Step 3-A で作成した仕様書をそのまま渡す。「SVGコードのみを出力せよ」と明記する。
+
+Sonnet が返した結果から ```svg ``` ブロック内のSVGコードを抽出し、`~/.claude/skills/instagram/scripts/eyecatch.svg` に Write で保存する。
 
 ### STEP 4: ベース画像生成
 1. Bash で Puppeteer スクリプトを実行する:
